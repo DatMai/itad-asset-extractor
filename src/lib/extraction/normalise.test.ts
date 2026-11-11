@@ -181,12 +181,12 @@ describe("normaliseCpu", () => {
     expect(result.confidence).toBe(1);
   });
 
-  it("keeps a family without a model number, with lower confidence", () => {
+  it("keeps a family without a model number, flagged for checking", () => {
     expect(normaliseCpu("Core i5 11th gen")).toMatchObject({
       value: "Intel Core i5 11th gen",
-      confidence: 0.7,
+      confidence: 0.6,
     });
-    expect(normaliseCpu("i7")).toMatchObject({ value: "Intel Core i7", confidence: 0.7 });
+    expect(normaliseCpu("i7")).toMatchObject({ value: "Intel Core i7", confidence: 0.6 });
   });
 
   it("keeps an unknown CPU as written, flagged", () => {

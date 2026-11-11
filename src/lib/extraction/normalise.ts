@@ -177,7 +177,8 @@ export function normaliseCpu(raw: string): Normalised<string> {
   if (isPlaceholder(raw)) return empty();
   const cpu = findCpu(tidyCpuText(raw));
   if (!cpu) return { value: cleanText(raw), confidence: 0.6, note: "Not a CPU family we know; kept as written" };
-  if (!cpu.hasModel) return { value: cpu.name, confidence: 0.7, note: "No model number given" };
+  // "i5" alone does not identify a processor, so it is shown as "check this".
+  if (!cpu.hasModel) return { value: cpu.name, confidence: 0.6, note: "No model number given" };
   return { value: cpu.name, confidence: 1 };
 }
 

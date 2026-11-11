@@ -76,6 +76,16 @@ export interface ColumnMapping {
   samples: string[];
 }
 
+/**
+ * How we intend to read one sheet: where its header is and what each column holds.
+ * It is guessed by planSheet() and can then be corrected by the user.
+ */
+export interface SheetPlan {
+  sheet: RawSheet;
+  header: HeaderGuess;
+  columns: ColumnMapping[];
+}
+
 /** How a value was obtained. */
 export type FieldSource =
   | "column" // read from a column mapped to this field

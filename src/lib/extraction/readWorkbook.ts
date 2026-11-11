@@ -5,16 +5,11 @@
  * so the parser library can be replaced here without touching the rest of the pipeline.
  */
 import * as XLSX from "xlsx";
+import { LIMITS } from "./limits";
 import { cleanText } from "./text";
 import type { RawSheet } from "./types";
 
-/** Hard limits. They keep a huge or hostile file from freezing the browser tab. */
-export const LIMITS = {
-  fileBytes: 5 * 1024 * 1024,
-  rows: 5000,
-  columns: 60,
-  sheets: 20,
-};
+export { LIMITS };
 
 /** A file we refuse, with what is wrong and what the user can do about it. */
 export class UnreadableFileError extends Error {

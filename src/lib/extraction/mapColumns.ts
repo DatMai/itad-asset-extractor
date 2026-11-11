@@ -176,11 +176,9 @@ function nameScore(header: string, field: FieldDef): { score: number; reason: st
     return { score: 0.7 + 0.25 * share, reason: `"${header}" contains "${inside}"` };
   }
 
-  // 3. An abbreviation of a known one-word name: "Manuf", "Loc", "Mdl", "Scr".
-  if (words.length === 1 && name.length >= 3) {
-    const full = known.find((synonym) => !synonym.includes(" ") && synonym.length >= name.length + 2 && isAbbreviation(name, synonym));
-    if (full) return { score: 0.8, reason: `"${header}" looks like an abbreviation of "${full}"` };
-  }
+  // 3. An abbreviation of a known name, word for word: "Manuf", "Mdl", "Ser#", "Cost Ctr".
+  const full = known.find((synonym) => abbreviates(words, synonym.split(" ")));
+  if (full) return { score: 0.8, reason: `"${header}" looks like an abbreviation of "${full}"` };
 
   // 4. A misspelling: at most one wrong letter in six. "Seriel No", "Procesor".
   if (compact(name).length >= 6) {
@@ -195,11 +193,22 @@ function nameScore(header: string, field: FieldDef): { score: number; reason: st
 }
 
 /**
+ * True when `short` is `full` with one or more words shortened: same number of words, each one
+ * either identical or an abbreviation of its counterpart.
+ */
+function abbreviates(short: string[], full: string[]): boolean {
+  if (short.length !== full.length) return false;
+  const shortened = short.filter((word, position) => word !== full[position]);
+  return shortened.length > 0 && short.every((word, position) => word === full[position] || isAbbreviation(word, full[position]));
+}
+
+/**
  * People shorten a word in two ways: they keep its beginning ("manuf") or its consonants
  * ("mdl"). The second form is only accepted when the short word has no vowel at all, so that
  * an ordinary word is not taken for shorthand ("date" is not "department").
  */
 function isAbbreviation(short: string, full: string): boolean {
+  if (short.length < 3 || full.length < short.length + 2) return false;
   if (full.startsWith(short)) return true;
   if (/[aeiou]/.test(short) || short[0] !== full[0]) return false;
   let matched = 0; // letters of `short` found in `full`, in order
@@ -234,6 +243,8 @@ function fitsNamedColumn(kind: ValueKind, target: ColumnTarget): boolean {
   if (kind === target) return true;
   // A bare "256 GB" could be RAM or storage; under a header that says which, it is that.
   if (kind === "smallSize" || kind === "largeSize") return target === "ramGB" || target === "storageGB";
+  // Identifiers all look alike: "P2422H" could be a model number, a serial or a tag.
+  if (kind === "serialNumber" || kind === "assetTag") return ["serialNumber", "assetTag", "model"].includes(target);
   // A model cell often carries the brand or the specs as well; rows deal with that.
   return kind === "combined" && target === "model";
 }

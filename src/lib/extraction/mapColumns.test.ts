@@ -109,6 +109,16 @@ describe("mapColumns: names it has not seen exactly", () => {
     expect(byHeader(["Mdl"], [], "Mdl").reason).toBe('"Mdl" looks like an abbreviation of "model"');
   });
 
+  it("reads abbreviations inside a header of several words", () => {
+    expect(targets(["Ser#", "Cost Ctr", "Purch Date", "Mod. No"], [])).toEqual({
+      "Ser#": "serialNumber",
+      "Cost Ctr": "costCentre",
+      "Purch Date": "purchaseDate",
+      "Mod. No": "model",
+    });
+    expect(byHeader(["Ser#"], [], "Ser#").reason).toBe('"Ser#" looks like an abbreviation of "serial no"');
+  });
+
   it("does not take an ordinary word for an abbreviation", () => {
     // The letters of "date" appear in order in "department", but "Date" is a word, not shorthand.
     expect(byHeader(["Date"], [], "Date").target).toBe("ignore");
@@ -180,6 +190,10 @@ describe("mapColumns: using the values", () => {
     // The rows are still parsed for the extra facts; see extractAssets.
     const rows = [["Dell Lat 5420 i7 16GB"], ["HP EliteBook 840 G8 i5 8GB 256GB"]];
     expect(byHeader(["Model"], rows, "Model")).toMatchObject({ target: "model", confidence: 1 });
+  });
+
+  it("does not let a model number that looks like a serial count against a Model header", () => {
+    expect(byHeader(["Model"], [["P2422H"], ["U2720Q"], ["Latitude 5420"]], "Model")).toMatchObject({ target: "model", confidence: 1 });
   });
 
   it("does not let bare sizes or free text count against the header", () => {

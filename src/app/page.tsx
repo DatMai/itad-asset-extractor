@@ -1,6 +1,9 @@
 import { Importer } from "@/components/Importer";
 
 export default function Home() {
+  // Only whether a key exists is passed to the browser, to show or hide the "Ask AI" button.
+  // The key itself is read again, on the server, by the route that uses it.
+  const aiAvailable = Boolean(process.env.ANTHROPIC_API_KEY);
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
       <header className="mb-6">
@@ -10,7 +13,7 @@ export default function Home() {
           holds, splits cells that mix several facts, and shows what it is unsure about.
         </p>
       </header>
-      <Importer />
+      <Importer aiAvailable={aiAvailable} />
     </main>
   );
 }

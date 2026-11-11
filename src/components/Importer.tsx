@@ -5,6 +5,9 @@ import { applyEdits, NO_EDITS, setColumnTarget, type Edits } from "@/lib/extract
 import { LIMITS } from "@/lib/extraction/limits";
 import { extractAll, planSheet } from "@/lib/extraction/pipeline";
 import type { Asset, ColumnTarget, FieldKey, SheetPlan } from "@/lib/extraction/types";
+import { SuggestionsSchema } from "@/lib/llm/schema";
+import { applySuggestions, buildSuggestRequest, unclearColumns } from "@/lib/llm/suggestions";
+import { AiSuggest, type AiStatus } from "./AiSuggest";
 import { MappingPanel } from "./MappingPanel";
 import { ResultsPanel } from "./ResultsPanel";
 import { UploadPanel, type Problem } from "./UploadPanel";
@@ -21,11 +24,13 @@ interface Loaded {
  * manual edits, and the last problem) and derives everything shown from them. All interpreting
  * of spreadsheet data happens in src/lib/extraction; this component only wires it to the screen.
  */
-export function Importer() {
+export function Importer({ aiAvailable }: { aiAvailable: boolean }) {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [edits, setEdits] = useState<Edits>(NO_EDITS);
   const [problem, setProblem] = useState<Problem | null>(null);
   const [busy, setBusy] = useState(false);
+  /** Sheet name -> where the optional AI suggestion stands for that sheet. */
+  const [ai, setAi] = useState<Record<string, AiStatus>>({});
 
   // Extraction is a pure function of the plans, so a mapping change just runs it again.
   const result = useMemo(() => {
@@ -49,6 +54,7 @@ export function Importer() {
         excluded: new Set(sheets.filter((sheet) => sheet.hidden).map((sheet) => sheet.name)),
       });
       setEdits(NO_EDITS);
+      setAi({});
     } catch (error) {
       setLoaded(null);
       setProblem(describe(error));
@@ -99,6 +105,41 @@ export function Importer() {
   const setKind = (assetId: string, kind: Asset["kind"]) =>
     setEdits((current) => ({ ...current, kinds: { ...current.kinds, [assetId]: kind } }));
 
+  /**
+   * Ask the server (and through it, Claude) about the columns the rules left unclear.
+   * This is the only request that carries spreadsheet data, and only after a click.
+   * On any failure the plan is left exactly as the rules made it.
+   */
+  async function askAi(sheet: string) {
+    const plan = loaded?.plans.find((item) => item.sheet.name === sheet);
+    if (!plan) return;
+    const report = (status: AiStatus) => setAi((current) => ({ ...current, [sheet]: status }));
+    report({ state: "asking" });
+    try {
+      const response = await fetch("/api/suggest-mapping", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildSuggestRequest(plan)),
+      });
+      const body: unknown = await response.json().catch(() => null);
+      const answer = SuggestionsSchema.safeParse(body);
+      if (!response.ok || !answer.success) {
+        const reason = typeof body === "object" && body !== null && "error" in body ? String(body.error) : "The AI suggestion failed.";
+        report({ state: "failed", message: `${reason} Nothing was changed.` });
+        return;
+      }
+      const suggestions = answer.data.suggestions;
+      const changed = applySuggestions(plan, suggestions).columns.filter((column, position) => column !== plan.columns[position]).length;
+      updatePlan(sheet, (current) => applySuggestions(current, suggestions));
+      report({
+        state: "done",
+        message: changed > 0 ? `AI suggested a field for ${changed} ${changed === 1 ? "column" : "columns"}. They are marked “AI” above: please check them.` : "AI could not identify these columns either. They stay unused.",
+      });
+    } catch {
+      report({ state: "failed", message: "The AI service could not be reached. Nothing was changed." });
+    }
+  }
+
   const assetCounts: Record<string, number> = {};
   for (const asset of result?.assets ?? []) assetCounts[asset.sheet] = (assetCounts[asset.sheet] ?? 0) + 1;
 
@@ -118,6 +159,11 @@ export function Importer() {
             onTarget={changeTarget}
             onHeaderRow={changeHeaderRow}
             onToggleSheet={toggleSheet}
+            aiControl={
+              aiAvailable
+                ? (plan) => <AiSuggest unclear={unclearColumns(plan).length} status={ai[plan.sheet.name]} onAsk={() => void askAi(plan.sheet.name)} />
+                : undefined
+            }
           />
           <ResultsPanel fileName={loaded.fileName} assets={result.assets} skipped={result.skipped} onEdit={editValue} onKind={setKind} />
         </>

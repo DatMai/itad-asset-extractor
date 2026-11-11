@@ -1,0 +1,9 @@
+﻿Inventory export, generated 2026-10-01, do not edit
+
+Mfr;Mdl;SN;Proc;Mem;Stor;Scr;Dept;Bought
+Dell;Latitude 7420;4ABC123;i7-1185G7;16 GB;512 GB SSD;14,0";Finance;17-05-2022
+HP;EliteBook 840 G8;5CG9876ABC;i5-1145G7;8 GB;256 GB SSD;14,0";Sales;03-11-2021
+Lenovo;"ThinkPad P1 Gen 4; touch";PF4MNO12;i7-11800H;32 GB;1 TB SSD;15,6";Engineering;21-01-2022
+Apple;MacBook Air M2;FVFJK3L4M5N6;Apple M2;8 GB;256 GB SSD;13,6";Design;09-09-2022
+
+Dell;OptiPlex 7090;9XYZ5N2;i7-10700;16384 MB;1 TB HDD;;Reception;25-01-2021

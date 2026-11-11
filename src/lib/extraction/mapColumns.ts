@@ -42,6 +42,9 @@ const VALUE_ONLY_LIMIT: Partial<Record<ColumnTarget, number>> = {
   assetTag: 0.6,
 };
 
+/** Fields that hold any text. Their values have no shape, so values cannot contradict the header. */
+const FREE_TEXT: ColumnTarget[] = ["notes", "assignedTo", "location", "costCentre"];
+
 const TARGETS: ColumnTarget[] = [...FIELD_KEYS, "combined"];
 const definitionOf = (target: ColumnTarget): FieldDef => (target === "combined" || target === "ignore" ? COMBINED : FIELDS[target]);
 /** How a kind of value is named in a reason: "3 of 3 values look like CPU". */
@@ -118,22 +121,22 @@ function candidatesFor(index: number, header: string, values: string[]): Candida
   }
 
   const kinds = kindsOf(values);
-  const classified = kinds.filter((kind) => kind !== null).length;
   const candidates: Candidate[] = [];
   for (const { target, name } of names) {
-    const matching = kinds.filter((kind) => kind === target).length;
     let confidence: number;
     let reason: string;
 
     if (name) {
       // The header names this field. Values that look like something else count against it;
       // values we cannot classify (names, places) count neither way.
-      const against = values.length > 0 ? (classified - matching) / values.length : 0;
+      const odd = FREE_TEXT.includes(target) ? 0 : kinds.filter((kind) => kind !== null && !fitsNamedColumn(kind, target)).length;
+      const against = values.length > 0 ? odd / values.length : 0;
       confidence = name.score * (1 - 0.4 * against);
-      reason = against >= 0.3 ? `${name.reason}, but ${classified - matching} of ${values.length} values look like something else` : name.reason;
+      reason = against >= 0.3 ? `${name.reason}, but ${odd} of ${values.length} values look like something else` : name.reason;
     } else {
       // The header does not name this field. Map it only when most values have its shape.
       const limit = VALUE_ONLY_LIMIT[target];
+      const matching = kinds.filter((kind) => kind !== null && fitsUnnamedColumn(kind, target)).length;
       const support = values.length > 0 ? matching / values.length : 0;
       if (!limit || support < 0.6) continue;
       confidence = limit * support;
@@ -223,7 +226,26 @@ export function isKnownColumnName(text: string): boolean {
 /** "IT-0001", "LAP 123": a short letter prefix and a running number. */
 const TAG = /^([a-z]{1,6})[-_ ]?\d{2,8}$/i;
 
-function kindsOf(values: string[]): (ColumnTarget | null)[] {
+/** What a value looks like. A lone size is "small" or "large" until a header says RAM or storage. */
+type ValueKind = ColumnTarget | "smallSize" | "largeSize";
+
+/** Would a value of this kind be at home in a column whose header says `target`? */
+function fitsNamedColumn(kind: ValueKind, target: ColumnTarget): boolean {
+  if (kind === target) return true;
+  // A bare "256 GB" could be RAM or storage; under a header that says which, it is that.
+  if (kind === "smallSize" || kind === "largeSize") return target === "ramGB" || target === "storageGB";
+  // A model cell often carries the brand or the specs as well; rows deal with that.
+  return kind === "combined" && target === "model";
+}
+
+/** Without a header to lean on, the size itself decides: small is RAM, large is storage. */
+function fitsUnnamedColumn(kind: ValueKind, target: ColumnTarget): boolean {
+  if (kind === "smallSize") return target === "ramGB";
+  if (kind === "largeSize") return target === "storageGB";
+  return kind === target;
+}
+
+function kindsOf(values: string[]): (ValueKind | null)[] {
   const kinds = values.map(kindOfValue);
   // Asset tags share one prefix ("IT-0001", "IT-0002"); serial numbers do not.
   const prefixes = values.map((value) => TAG.exec(value)?.[1].toLowerCase());
@@ -232,7 +254,8 @@ function kindsOf(values: string[]): (ColumnTarget | null)[] {
 }
 
 /** What one cell looks like on its own, or null when it could be anything (a name, a place). */
-export function kindOfValue(value: string): ColumnTarget | null {
+export function kindOfValue(value: string): ValueKind | null {
+  if (isPlaceholder(value)) return null;
   const parsed = parseFreeText(value);
   const line = findProductLine(normaliseText(value));
   const facts = [
@@ -247,14 +270,18 @@ export function kindOfValue(value: string): ColumnTarget | null {
   if (facts >= 2) return "combined";
   if (parsed.cpu) return "cpu";
   if (parsed.screenInches) return "screenInches";
-  if (parsed.ramGB) return "ramGB";
-  if (parsed.storageGB) return "storageGB";
+  const size = parsed.ramGB ?? parsed.storageGB;
+  if (size) {
+    // Below 0.7 the parser only went by magnitude: one bare size, no label, no "TB", no "2x".
+    if (size.confidence < 0.7) return parsed.ramGB ? "smallSize" : "largeSize";
+    return parsed.ramGB ? "ramGB" : "storageGB";
+  }
+  if (line) return "model"; // "Latitude 5420", "Surface Laptop 5"
   if (tokens(value).length <= 3) {
     if (normaliseAssetType(value).confidence === 1) return "assetType";
     if (normaliseManufacturer(value).confidence === 1) return "manufacturer";
   }
   if (normaliseDate(value).confidence >= 0.7) return "purchaseDate";
-  if (line) return "model";
   return looksLikeSerial(value) ? "serialNumber" : null;
 }
 

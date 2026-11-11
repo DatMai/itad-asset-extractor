@@ -318,3 +318,39 @@ describe("fixing the plan by hand", () => {
     expect(skipped.map((row) => row.reason)).toContain("Repeats the header row");
   });
 });
+
+describe("a Model column that holds more than the model", () => {
+  const sheet = {
+    name: "S",
+    hidden: false,
+    rows: [
+      ["Model", "S/N"],
+      ["Dell Lat 5420 i7 16GB", "7HKQ2M3"],
+      ["iMac 24-inch", "C02DW1ABQ6X4"],
+    ],
+  };
+  const { assets } = extractSheet(planSheet(sheet));
+
+  it("pulls the brand and the specs out of the cell quoted in the brief", () => {
+    expect(values(assets[0])).toEqual({
+      model: "Latitude 5420",
+      serialNumber: "7HKQ2M3",
+      manufacturer: "Dell",
+      assetType: "laptop",
+      cpu: "Intel Core i7",
+      ramGB: 16,
+    });
+    expect(assets[0].fields.model?.raw).toBe("Lat 5420");
+  });
+
+  it("leaves a clean model cell exactly as written, and still learns from it", () => {
+    expect(values(assets[1])).toEqual({
+      model: "iMac 24-inch",
+      serialNumber: "C02DW1ABQ6X4",
+      manufacturer: "Apple",
+      assetType: "desktop",
+      screenInches: 24,
+    });
+    expect(assets[1].fields.manufacturer?.source).toBe("inferred");
+  });
+});

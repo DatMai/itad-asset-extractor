@@ -176,9 +176,19 @@ describe("mapColumns: using the values", () => {
     expect(byHeader(["Equipment"], [["Laptop"], ["Desktop"], ["Server"]], "Equipment").target).toBe("assetType");
   });
 
-  it("treats a Model column full of specs as a combined column", () => {
+  it("keeps a Model column that also holds brand and specs as the model column", () => {
+    // The rows are still parsed for the extra facts; see extractAssets.
     const rows = [["Dell Lat 5420 i7 16GB"], ["HP EliteBook 840 G8 i5 8GB 256GB"]];
-    expect(byHeader(["Model"], rows, "Model").target).toBe("combined");
+    expect(byHeader(["Model"], rows, "Model")).toMatchObject({ target: "model", confidence: 1 });
+  });
+
+  it("does not let bare sizes or free text count against the header", () => {
+    // "256 GB" alone could be storage, but the header says Memory.
+    expect(byHeader(["Memory"], [["16GB"], ["256 GB"], ["384GB"]], "Memory")).toMatchObject({ target: "ramGB", confidence: 1 });
+    // A note that happens to look like a type or a serial number is still a note.
+    expect(byHeader(["Notes"], [["storage server?"], ["2-in-1"], ["CEO"]], "Notes")).toMatchObject({ target: "notes", confidence: 1 });
+    // A labelled size does contradict the header.
+    expect(byHeader(["Memory"], [["512GB SSD"], ["1TB HDD"]], "Memory").confidence).toBeLessThan(LOW_CONFIDENCE);
   });
 });
 

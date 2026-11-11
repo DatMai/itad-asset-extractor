@@ -15,7 +15,7 @@ Any agent (Claude Code, Codex, Copilot, Cursor) starts here. Humans can read it 
 ## Read in this order
 
 1. This file: rules and commands.
-2. `.local-map/README.md`: where everything is and how we got here.
+2. `.local-map/README.md`, then `.local-map/MAP.md`: where everything is and how we got here.
 3. `.agent/HANDOFF.md`: what is done, what is next, what is broken.
 4. `docs/spec.md`: the requirements and acceptance criteria. It wins over everything else.
 
@@ -37,6 +37,8 @@ top of it.
 | `pnpm lint` | ESLint |
 | `pnpm build` | Production build |
 | `pnpm fixtures` | Regenerate the self-made sample files in `public/samples/` |
+| `.local-map/scripts/check.sh` | Run typecheck, lint and tests, and save the output as evidence |
+| `python3 -I .local-map/scripts/inspect-workbook.py <file>` | Print what a spreadsheet file really stores |
 
 ## Rules
 

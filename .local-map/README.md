@@ -11,6 +11,7 @@ cold, human or agent, should be able to find their way from this folder alone.
 | [`MAP.md`](MAP.md) | The terrain: every module, what it does, where to change what | Find the code for X |
 | [`JOURNEY.md`](JOURNEY.md) | The route: what was done, in order, with evidence | See how we got here |
 | [`DECISIONS.md`](DECISIONS.md) | The forks: options, choice, what it cost | Understand why it is built this way |
+| [`REVIEW.md`](REVIEW.md) | What review found, what was fixed, what is not verified | Know how far to trust it |
 | [`scripts/`](scripts/) | Tools made along the way | Repeat a check or an investigation |
 | [`evidence/`](evidence/) | Outputs that back the claims | Verify without re-running |
 | [`screenshots/`](screenshots/) | The UI at each milestone | See the app without starting it |
@@ -27,7 +28,20 @@ Related: [`../docs/spec.md`](../docs/spec.md) (requirements; wins over everythin
 | --- | --- |
 | `scripts/inspect-workbook.py <file>` | Prints what is really stored in an `.xlsx` or `.csv`: sheets, row numbers, cell types, formulas, merged ranges, BOM, line endings. Standard library only. |
 | `scripts/check.sh` | Runs typecheck, lint and tests, and saves the output to `evidence/checks/latest.txt`. |
-| `scripts/screenshot.sh` | Captures the running app into `screenshots/` with headless Chrome. |
+
+## Screenshots
+
+Taken in the app's built-in browser (Chromium) at 1280 px while checking each milestone.
+
+| File | Shows |
+| --- | --- |
+| `01-upload.jpg` | The upload panel and the six bundled samples |
+| `02-mapping-sample1.jpg` | Client sample 1: header on row 4, ten columns mapped, each with its reason |
+| `03-results-sample1.jpg` | Client sample 1: 19 assets from two sheets; the one flagged CPU |
+| `04-mapping-no-header.jpg` | A file with no header row: columns identified from values, two flagged |
+| `05-not-computers-sample2.jpg` | Client sample 2: the monitor and the keyboard set aside |
+| `06-error-not-a-spreadsheet.jpg` | An image renamed `.xlsx`: a specific message and a next step |
+| `07-ai-failure-keeps-the-rules-result.jpg` | The AI suggestion failing (invalid key): message shown, mapping unchanged |
 
 ## Evidence
 

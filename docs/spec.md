@@ -51,8 +51,9 @@ source file, a fleet dashboard. One idea done properly beats ten done halfway.
   - The spreadsheet is parsed in the browser and is never uploaded or stored.
   - No secrets in git (`.env.local` ignored, `.env.example` provided).
   - Limits: 5 MB per file, 5,000 rows and 60 columns per sheet, 20 sheets.
-  - The LLM call only happens on an explicit click and sends column headers plus at most five
-    sample values per column; columns holding people or places are redacted.
+  - The LLM call only happens on an explicit click. It sends the column names of one sheet and
+    at most five sample values from the columns the rules could not identify; values of settled
+    columns are never sent, and identifiers are masked to their shape.
   - Exported CSV neutralises formula injection.
 - **C5 Never invent data.** Unknown stays empty with low confidence. The original cell text is
   kept next to every normalised value.

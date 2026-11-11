@@ -30,7 +30,7 @@ Run `pnpm test` and confirm the new test fails for the reason you expect.
 | Product line → manufacturer and type ("Latitude") | `src/lib/extraction/vocab.ts`, `PRODUCT_LINES` |
 | Asset type word ("Ultrabook") | `src/lib/extraction/vocab.ts`, `TYPE_WORDS` |
 | Non-computer word ("docking station") | `src/lib/extraction/vocab.ts`, `NON_COMPUTER_WORDS` |
-| CPU family pattern | `src/lib/extraction/vocab.ts`, `CPU_PATTERNS` |
+| CPU family pattern | `src/lib/extraction/vocab.ts`, `CPU_RULES` |
 | Unit or number format | `src/lib/extraction/normalise.ts` |
 
 Add only the entry the test needs. Do not add speculative synonyms: a wrong synonym maps a column

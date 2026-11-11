@@ -50,3 +50,93 @@ Append-only log. Newest at the bottom. Times are Vietnam time (GMT+7).
   identification; parsing combined cells; importer UX patterns. Output: `docs/research.md`.
 - Wrote `AGENTS.md`, `CLAUDE.md`, `.agent/PROTOCOL.md`, three skills and three subagent
   definitions under `.claude/`, and this map.
+
+### 22:40 The map became `.local-map`
+
+- The owner corrected the first version: the map is a folder that holds scripts, screenshots and
+  evidence, not only notes. Renamed `local-map/` to `.local-map/`, added `scripts/`, `evidence/`,
+  `screenshots/`, `research/`.
+- Evidence: `scripts/inspect-workbook.py`, `evidence/sample-dumps/*.txt`.
+
+### 22:45 Installed SheetJS and probed how it behaves
+
+- Installed 0.20.3 from `cdn.sheetjs.com` (decisions D1 and D18).
+- Probed before writing the reader, to replace assumptions with facts:
+  - With `raw: true`, CSV cells stay text: `0012`, `1E5` and `12/03/2021` come back unchanged.
+  - Delimiters `;`, tab and `|` are detected; `sep=|` is honoured.
+  - A JavaScript `Date` for midnight UTC, written on a machine in GMT+7, is stored as
+    `44267.29` and formatted `3/12/21`. That is the time-zone trap; we convert the day number
+    ourselves instead (`readWorkbook.ts`, `dayNumberToIso`).
+  - A PNG is refused by SheetJS; a PDF is not (it parses as one text column), so we check for it.
+
+### 22:48 Normalisers
+
+- `normalise.ts` with 116 tests for the AC5 table.
+- Honest note on process: these tests were written before the code but first run after it.
+  From `parseFreeText` on, every test file was run and seen failing before the code existed.
+
+### 22:53 Combined cells
+
+- `parseFreeText.ts`: all 16 descriptions of `sample_assets_2.csv` parse exactly, plus the cells
+  of `Sheet1 (2)` and "Dell Lat 5420 i7 16GB" from the brief.
+
+### 23:00 Column mapping
+
+- `mapColumns.ts`. Swapped the similarity measure from letter pairs to edit distance: "Seriel No"
+  scored only 0.71 against "serial no" with letter pairs, which missed a one-letter typo (D9).
+
+### 23:02 Research finished
+
+- Report in `research/report.md`, one page in `docs/research.md`. Four findings changed the plan:
+  count delimiters ourselves (SheetJS looks at 1,024 characters only); load the parser with
+  `import()`; show confidence as named levels, not bare percentages; let the model answer
+  "unmapped".
+
+### 23:04 Header detection, 23:07 the reader and four fixtures
+
+- `detectHeader.ts`, `readWorkbook.ts`, `scripts/make-fixtures.mjs`.
+- A mistake caught by its own test: the first hand-made "encrypted zip" bytes did not trigger
+  SheetJS's encryption error. The test now uses bytes that do, and says that no real
+  password-protected workbook was available.
+
+### 23:11 The pipeline on the real files
+
+- `extractAssets.ts`, `pipeline.ts`. 23 of 24 acceptance tests passed on the first run. The one
+  that failed showed a CPU with no model number sitting exactly on the "Check" threshold; it is
+  now below it (D12).
+- A probe then showed the `Memory` column at 0.92 because `256 GB` was classed as storage.
+  Fixed how values count for or against a header (D10). Details in `REVIEW.md`.
+
+### 23:17 Manual corrections, 23:20 the UI
+
+- `edits.ts`, then the four panels.
+- Checked in the browser (Chromium, 1280 px): both client samples, the four fixtures, six kinds
+  of unreadable file, remapping a column, editing a cell, the non-computer and skipped views.
+- Found there: the page scrolled sideways (fixed). Screenshots `01`–`06`.
+
+### 23:27 The optional AI suggestion
+
+- `src/lib/llm/`, `src/app/api/suggest-mapping/route.ts`, tests with a fake client (D13).
+- Ran it in the browser with a deliberately invalid key: request sent, 401 handled, message
+  shown, mapping unchanged. Screenshot `07`. A live suggestion is not verified: no key.
+- The placeholder `.env.local` could not be deleted (a guard on this machine protects `.env`
+  files), so it was left with an empty key. It is ignored by git.
+
+### 23:33 Production build
+
+- `pnpm build` passes: `/` static, `/api/suggest-mapping` dynamic. The parser is a separate
+  381 KB chunk (128 KB gzip) that the page does not reference until a file is opened.
+- The first attempts failed with "binding to a port: Operation not permitted". Cause: the build
+  had first been run inside a sandbox that forbids local ports, and Turbopack cached that
+  failure. Clearing `.next/cache` and `.next/turbopack` fixed it.
+
+### 23:36 Review as the client's engineer
+
+- Four data bugs and four UI issues found after the tests were green; each got a failing test
+  first. Listed in `REVIEW.md`. Commit `865df00`.
+- Measured speed at the row limit: 5,000 rows, plan 167 ms, extract 136 ms (Node).
+
+### 23:39 README, map and handoff
+
+- `README.md`, `MAP.md`, `REVIEW.md`, `.agent/HANDOFF.md`.
+- Final check run saved to `evidence/checks/latest.txt`.

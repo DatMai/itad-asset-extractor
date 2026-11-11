@@ -65,3 +65,88 @@ entry that names the one it replaces. The short version of these is the trade-of
 - **Choice.** `main` holds the scaffold commit; work happens on `feat/asset-extraction` and is
   merged when reviewed.
 - **Cost.** One merge before the repository link is shared.
+
+## D9 Edit distance for misspelt headers
+
+- **Options.** (a) Letter-pair similarity (Dice). (b) Edit distance. (c) A fuzzy-search library.
+- **Choice.** (b), accepting a header only above 0.8: one wrong letter in six.
+- **Why.** Letter pairs scored "Seriel No" at 0.71, missing a one-letter typo. Edit distance is
+  twenty lines and its threshold has a plain meaning. A library would add a dependency for the
+  same job. Abbreviations are not a similarity problem at all ("S/N" shares nothing with "serial
+  number"), so they are handled by the synonym lists and an abbreviation rule.
+- **Cost.** Two short words one letter apart ("model", "modem") sit exactly at the limit; they
+  are kept out by requiring a score strictly above 0.8.
+
+## D10 Values can weaken or replace the header
+
+- **Choice.** A header match is multiplied by `1 - 0.4 × share of values that look like something
+  else`. A column with no usable header is mapped from its values when at least 60% have the
+  field's shape, up to a per-field ceiling (CPU 0.8, serial 0.6, dates never).
+- **Why.** Headers lie ("Type" over a column of descriptions), and some files have none. But most
+  values prove little: any identifier looks like a serial number, any date could be a warranty
+  date. So the ceiling depends on how unmistakable the shape is.
+- **Cost.** More rules to explain. A column recognised only by its values is always shown as
+  Medium or Check, never High.
+
+## D11 Confidence is a level with a reason
+
+- **Choice.** High from 0.85, Medium, Check below 0.7. The number is shown second. A value's
+  confidence is its own times its column's.
+- **Why.** Research (Google PAIR, importer products) says people over-trust bare percentages and
+  act on categories. The reason matters more than the number.
+- **Cost.** The thresholds are judgment, not measured accuracy. They are tuned on six files.
+
+## D12 A CPU without a model number is flagged
+
+- **Choice.** `Core i5 11th gen` and `i7` score 0.6, below the "Check" line.
+- **Why.** The family alone does not identify a processor, and for resale value the model matters.
+- **Cost.** One yellow cell in the client's first sample.
+
+## D13 The shape of the AI suggestion
+
+- **Choice.** Column mapping only, on a click, for unclear columns only. Default model
+  `claude-opus-5-5`, low effort, structured output from a Zod schema. Identifiers masked.
+  Suggestions capped at Medium and labelled. No server-side model fallback: if the model
+  declines or fails, the rule-based mapping stands.
+- **Why.** The default model is Anthropic's documented default; choosing a cheaper one is the
+  operator's call (`ANTHROPIC_MODEL`). The call is a short classification, so low effort.
+  Our fallback is the deterministic result itself, so a second model would add a beta header
+  and a code path for a refusal that column names will not trigger.
+- **Cost.** About two cents per sheet on the default model. Names in an unclear column are sent
+  unmasked, because free text cannot be masked without losing what identifies the column.
+
+## D14 System fonts
+
+- **Choice.** Removed the scaffold's Google font.
+- **Why.** `next/font/google` downloads at build time; the app should build and run offline.
+- **Cost.** The typeface differs per operating system.
+
+## D15 Hidden sheets are read but left out by default
+
+- **Why.** Hidden sheets usually hold stale copies. Showing them, switched off, lets the user
+  decide and keeps nothing invisible.
+- **Cost.** One more control on the page.
+
+## D16 A quantity column raises a warning
+
+- **Options.** (a) Ignore it. (b) Multiply the row. (c) Warn.
+- **Choice.** (c).
+- **Why.** Multiplying invents assets with identical details and no serial numbers. Ignoring
+  undercounts silently.
+- **Cost.** The count of assets is still the count of rows.
+
+## D17 The scaffold's Next.js flags stay
+
+- **Choice.** `cacheComponents` and `partialPrefetching` are left as generated.
+- **Why.** They are the framework's current defaults and do not change how this one-page app
+  behaves: the page is a static shell either way.
+- **Cost.** Two lines of configuration whose effect here is nil.
+
+## D18 SheetJS from its URL, not vendored
+
+- **Options.** (a) Depend on the CDN tarball URL. (b) Commit the tarball and depend on the file.
+- **Choice.** (a). The lockfile pins the URL and its integrity hash.
+- **Why.** It is the install command SheetJS documents, and it keeps a multi-megabyte archive
+  (7.8 MB unpacked) out of git.
+- **Cost.** `pnpm i` needs `cdn.sheetjs.com` to be reachable. SheetJS itself recommends (b) for
+  that reason; it is the first thing to change if installs must work offline.

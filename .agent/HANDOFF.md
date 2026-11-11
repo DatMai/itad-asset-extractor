@@ -4,38 +4,69 @@ The state of the work, for whoever picks it up next. Format and rules: `.agent/P
 
 ## State right now
 
-- **Branch:** `feat/asset-extraction` (`main` holds only the scaffold commit).
-- **Works:** the scaffolded Next.js app starts. Nothing project-specific is built yet.
-- **Written:** `docs/spec.md`, agent guides (`AGENTS.md`, `.agent/`, `.claude/`), `.local-map/`.
-- **Not done:** research summary, plan, the whole extraction pipeline, the UI, the LLM route,
-  the README.
-- **Not verified:** nothing has been pushed or deployed.
+- **Branch:** all work is on `feat/asset-extraction`; `main` holds only the scaffold commit.
+  Nothing has been pushed. There is no remote yet.
+- **Works, with proof:**
+  - `pnpm typecheck`, `pnpm lint`, `pnpm test` (287 tests) and `pnpm build` pass.
+    Last run: `.local-map/evidence/checks/latest.txt`.
+  - Client sample 1: headers on rows 4 and 3, 15 + 4 = 19 assets, `TOTAL` skipped.
+  - Client sample 2: 14 of 14 computers with all six fields right, 2 non-computers, NAS typed.
+  - Four generated fixtures (Vietnamese headers on row 7, `;` CSV with abbreviations, no header,
+    one cell per asset in `.xls`) extract as asserted in `pipeline.test.ts`.
+  - UI checked by hand in Chromium at 1280 px: upload, mapping, remap, header row, edit a cell,
+    row filters, six kinds of unreadable file, CSV and JSON. Screenshots in
+    `.local-map/screenshots/`.
+- **Not verified:**
+  - A real AI suggestion. No API key was available; the route is tested with a fake client and
+    was run once in the browser with an invalid key (401 path).
+  - A real password-protected workbook.
+  - Browsers other than Chromium; screen readers; narrow screens.
+  - Deployment.
+- **Not done:** deploy to Vercel; push to a Git host; the author's own review
+  (`.local-map/REVIEW.md`, section 2).
 
 ## In progress
 
-- Extraction engineer: research summary and plan, then the pipeline in `src/lib/extraction`.
+Nothing is claimed.
 
 ## Next up
 
-1. `docs/research.md` and `docs/plan.md`.
-2. Pipeline, test-first: read workbook → detect header → map columns → normalise → parse free
-   text → assemble assets.
-3. UI: upload → mapping → results → export.
-4. Optional LLM mapping suggestion.
-5. README with demo script, self-review, release checks.
+1. Author review: work through the checklist in `.local-map/REVIEW.md` and add notes.
+2. Merge `feat/asset-extraction` into `main`, create the remote, push.
+3. Optional: deploy to Vercel; add the URL to the README.
+4. Optional: put a real key in `.env.local`, click "Ask AI" on the *No header row* sample, and
+   record what the model answers.
+
+## Ideas not taken, in order of value
+
+- Several tables in one sheet (a second header further down).
+- A Web Worker for parsing, to lift the 5,000-row limit.
+- Remember a corrected mapping per header signature, so the same supplier's next file maps itself.
+- AI help for single cells the rules could not read (sends row data; needs consent per cell).
+- A Playwright test for the upload → export path.
 
 ## Open questions for the human
 
-- Deadline time zone: the brief says 12:00 Friday 13 Nov with no zone. Assumed GMT+7.
-- An `ANTHROPIC_API_KEY` is needed to try the LLM route against the real API.
-- Deploying to Vercel and pushing to GitHub need the owner's accounts.
+- The brief says "12 PM Friday 13 November" with no time zone. Vietnam time is assumed.
+- `.env.local` exists with an empty key. It could not be deleted from here (a guard protects
+  `.env` files on this machine). It is ignored by git and harmless; delete it by hand if unwanted.
 
 ## Log
 
-### 2026-11-11 Extraction engineer: project set up
+### 2026-11-11 23:40 Extraction engineer: first complete version
+- Changed: everything. Pipeline, UI, optional AI route, tests, fixtures, README, map.
+- Verified: typecheck, lint, 287 tests, production build; the app by hand in a browser.
+- Not done / not verified: see "Not verified" and "Not done" above.
+- Next: the author's review, then merge and push.
+- Watch out:
+  - Do not run `pnpm add` while `pnpm dev` is running: the dev server keeps pointing at module
+    paths the install renames, and shows validation errors until it is restarted.
+  - `pnpm build` needs to open a local port (Turbopack runs Tailwind in a child process). In a
+    sandbox that forbids it the build fails, and the failure is cached: delete `.next/cache` and
+    `.next/turbopack` before retrying outside the sandbox.
+  - A new synonym can take a column away from another field. Run the whole suite, not one file.
+
+### 2026-11-11 22:35 Extraction engineer: project set up
 - Changed: scaffold, spec, agent guides, local map.
-- Verified: `pnpm install` completed; no checks exist yet beyond the scaffold.
-- Not done / not verified: everything under "Not done" above.
-- Next: write the plan, then start the pipeline with the header-detection test.
-- Watch out: the installed Next.js is newer than most examples online; read
-  `node_modules/next/dist/docs/` before using a Next.js API.
+- Verified: `pnpm install` completed.
+- Next: plan, then the pipeline, test first.

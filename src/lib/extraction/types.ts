@@ -72,6 +72,8 @@ export interface ColumnMapping {
   confidence: number;
   /** Human-readable evidence for the mapping. */
   reason: string;
+  /** Who decided the mapping: our rules, the optional LLM suggestion, or the user. */
+  source: "rules" | "ai" | "you";
   /** A few values from the column, shown beside the mapping so the user can judge it. */
   samples: string[];
 }

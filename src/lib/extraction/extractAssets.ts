@@ -26,7 +26,7 @@ import type { Asset, ColumnMapping, FieldKey, FieldValue, Normalised, SheetPlan,
 type Normaliser = (raw: string, header: string) => Normalised<string | number> & { nonComputer?: string };
 
 /** The normaliser of each field. The header is passed because it can carry a unit: "RAM (GB)". */
-const NORMALISERS: Record<FieldKey, Normaliser> = {
+export const NORMALISERS: Record<FieldKey, Normaliser> = {
   assetType: normaliseAssetType,
   manufacturer: normaliseManufacturer,
   model: normalisePlainText,

@@ -94,17 +94,17 @@ export function mapColumns(headers: string[], rows: string[][]): ColumnMapping[]
   }
 
   const headerOf = (index: number | undefined) => columns.find((column) => column.index === index)?.header;
-  return columns.map(({ index, header, values }) => {
+  return columns.map(({ index, header, values }): ColumnMapping => {
     const samples = [...new Set(values)].slice(0, 3);
     const pick = chosen.get(index);
     if (pick) {
-      return { index, header, target: pick.target, parts: pick.parts, confidence: round(pick.confidence, 2), reason: pick.reason, samples };
+      return { index, header, target: pick.target, parts: pick.parts, confidence: round(pick.confidence, 2), reason: pick.reason, source: "rules", samples };
     }
     const lost = lostField.get(index);
     const reason = lost
       ? `${targetLabel(lost)} is already taken by "${headerOf(owner.get(lost))}"`
       : "No matching field; kept as extra data";
-    return { index, header, target: "ignore", confidence: 0, reason, samples };
+    return { index, header, target: "ignore", confidence: 0, reason, source: "rules", samples };
   });
 }
 

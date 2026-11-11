@@ -15,7 +15,7 @@ Any agent (Claude Code, Codex, Copilot, Cursor) starts here. Humans can read it 
 ## Read in this order
 
 1. This file: rules and commands.
-2. `local-map/README.md`: where everything is and how we got here.
+2. `.local-map/README.md`: where everything is and how we got here.
 3. `.agent/HANDOFF.md`: what is done, what is next, what is broken.
 4. `docs/spec.md`: the requirements and acceptance criteria. It wins over everything else.
 
@@ -50,7 +50,7 @@ top of it.
    globals. Functions take data and return data, so they run the same in Vitest and the browser.
 5. **The file stays in the browser.** Do not add an upload endpoint or server-side storage.
 6. **No dependency without a decision.** Adding a package needs an entry in
-   `local-map/DECISIONS.md` that says what it replaces and what it costs.
+   `.local-map/DECISIONS.md` that says what it replaces and what it costs.
 7. **Explainable code.** Small functions, plain names, comments that say *why*. If a line cannot
    be explained in one sentence in a demo, simplify it.
 8. **Secrets.** Never read, print or commit `.env*` files other than `.env.example`.
@@ -58,7 +58,7 @@ top of it.
 ## Definition of done
 
 - `pnpm typecheck && pnpm lint && pnpm test` pass, and you have seen the output yourself.
-- The change is described in `local-map/JOURNEY.md`; `local-map/MAP.md` matches the code.
+- The change is described in `.local-map/JOURNEY.md`; `.local-map/MAP.md` matches the code.
 - `.agent/HANDOFF.md` says what changed and what the next agent should pick up.
 - Commits are small, with a message that says why.
 

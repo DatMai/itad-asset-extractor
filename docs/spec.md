@@ -5,7 +5,7 @@ requirement is measurable and traceable. A brief is only usable when it states a
 **goal, inputs, constraints, trade-offs, acceptance criteria, examples, evidence, sources.**
 Section 9 lists what was missing or contradictory in the first draft and how it was fixed.
 
-Status: accepted. Changes go through `local-map/DECISIONS.md`.
+Status: accepted. Changes go through `.local-map/DECISIONS.md`.
 
 ## 1. Goal
 

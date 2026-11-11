@@ -1,0 +1,29 @@
+=== sheet 'Assets'  state=visible  range=A1:J21  merged=none
+   1  A='Acme Logistics Pty Ltd - IT Asset Register'
+   2  A='Exported by: K. Brown  |  03/09/2026'
+   4  A='Device Type' | B='Make' | C='Model Name' | D='S/N' | E='Processor' | F='Memory' | G='HDD/SSD' | H='Display' | I='Assigned To' | J='Location'
+   5  A='Laptop' | B='Dell' | C='Latitude 5420' | D='7HKQ2M3' | E='Intel Core i7-1185G7' | F='16GB' | G='512GB SSD' | H='14"' | I='Sarah Lee' | J='Sydney'
+   6  A='laptop' | B='Lenovo' | C='ThinkPad T14 Gen 3' | D='PF3XA9B1' | E='i5-1245U' | F='16 GB' | G='256 GB NVMe' | H='14 inch' | I='Tom Nguyen' | J='Sydney'
+   7  A='Notebook' | B='Apple' | C='MacBook Pro 14 (2023)' | D='C02FK8ZTMD6R' | E='Apple M2 Pro' | F='32GB' | G='1TB' | H='14.2in' | I='Priya Shah' | J='Melbourne'
+   8  A='Laptop' | B='HP' | C='EliteBook 840 G8' | D='5CG1234XYZ' | E='Core i5 11th gen' | F='8gb' | G='256GB' | H='14' | I='Ben Carter' | J='Brisbane'
+   9  A='Desktop PC' | B='Dell' | C='OptiPlex 7090' | D='9JZL5N2' | E='Intel i7-10700' | F='32768 MB' | G='1 TB HDD' | H='N/A' | I='Reception' | J='Sydney'
+  10  A='Desktop' | B='HP' | C='ProDesk 400 G7' | D='4CE0471ABC' | E='i5-10500' | F='16GB' | G='512 GB SSD' | H='' | I='Warehouse kiosk' | J='Brisbane'
+  11  A='Workstation' | B='Lenovo' | C='ThinkStation P360' | D='S1GH77QX' | E='Intel Xeon W-1350' | F='64GB' | G='2x 1TB SSD' | H='-' | I='CAD team' | J='Melbourne'
+  12  A='Server' | B='Dell' | C='PowerEdge R740' | D='GTR4X93' | E='2 x Xeon Silver 4210' | F='256 GB' | G='4 x 1.92TB SSD (RAID 5)' | H='n/a' | I='' | J='Sydney DC'
+  13  A='Rack Server' | B='HPE' | C='ProLiant DL380 Gen10' | D='CZJ93805KL' | E='2x Intel Xeon Gold 6230' | F='384GB' | G='8x 2.4TB SAS' | H='' | I='' | J='Sydney DC'
+  14  A='server' | B='Lenovo' | C='ThinkSystem SR650' | D='J30091AB' | E='Xeon Silver 4314' | F='128 GB' | G='2 TB' | H='' | I='' | J='Melbourne comms room'
+  15  A='Laptop' | B='Microsoft' | C='Surface Laptop 5' | D='0F1234567890' | E='i7-1255U' | F='16GB' | G='512GB' | H='13.5"' | I='Mia Rossi' | J='Sydney'
+  16  A='Laptop' | B='Dell' | C='XPS 15 9520' | D='3XQ9PK3' | E='i9-12900HK' | F='32 GB' | G='1TB SSD' | H='15.6 inch' | I='Jack Wilson' | J='Sydney'
+  17  A='Mini PC' | B='Intel' | C='NUC 11 Pro' | D='G6TV1100ZZ' | E='i5-1135G7' | F='8 GB' | G='256GB SSD' | H='' | I='Meeting room 2' | J='Brisbane'
+  18  A='Laptop' | B='Apple' | C='MacBook Air M2' | D='FVFHK2Q1Q6L4' | E='Apple M2' | F='8GB' | G='256GB' | H='13.6"' | I='Leo Park' | J='Melbourne'
+  19  A='Desktop' | B='Apple' | C='iMac 24-inch' | D='C02DW1ABQ6X4' | E='Apple M1' | F='16GB' | G='512GB SSD' | H='24-inch' | I='Design team' | J='Sydney'
+  21  A='TOTAL' | J='15'<n>
+
+=== sheet 'Sheet1 (2)'  state=visible  range=A1:D7  merged=none
+   1  A='old list - check with Kevin before deleting!!'
+   3  A='Serial' | B='Equipment' | C='CPU / RAM / Disk' | D='Screen'
+   4  A='8RTQ3L2' | B='Dell Latitude 7400 laptop' | C='i5-8365U / 8GB / 256GB' | D='14in'
+   5  A='PC0X7Y8Z' | B='Lenovo ThinkCentre M720q' | C='i5-9500T / 16GB / 512GB SSD' | D=''
+   6  A='MXL9876ABC' | B='HP Z2 G5 Tower Workstation' | C='Xeon W-1270 / 64GB / 1TB' | D=''
+   7  A='2ZK4WD2' | B='Dell PowerEdge T340 server' | C='Xeon E-2224 / 32GB / 2x 4TB HDD' | D=''
+

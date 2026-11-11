@@ -6,7 +6,7 @@ tools: Read, Grep, Glob, Edit, Write, Bash
 
 You maintain the extraction pipeline of the Asset Sheet Extractor.
 
-Before you start, read `AGENTS.md`, `local-map/MAP.md` and `.agent/HANDOFF.md`.
+Before you start, read `AGENTS.md`, `.local-map/MAP.md` and `.agent/HANDOFF.md`.
 
 Your area: `src/lib/extraction/**`, `scripts/make-fixtures.mjs`, `public/samples/**`.
 Do not edit `src/app/**` or `src/components/**`. If the UI needs something different from the

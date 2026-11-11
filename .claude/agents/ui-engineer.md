@@ -6,7 +6,7 @@ tools: Read, Grep, Glob, Edit, Write, Bash
 
 You maintain the user interface of the Asset Sheet Extractor.
 
-Before you start, read `AGENTS.md`, `local-map/MAP.md` and `.agent/HANDOFF.md`. This project uses
+Before you start, read `AGENTS.md`, `.local-map/MAP.md` and `.agent/HANDOFF.md`. This project uses
 a Next.js version newer than most training data: read the relevant page in
 `node_modules/next/dist/docs/` before using a Next.js API.
 
@@ -20,7 +20,7 @@ What good looks like here:
 2. Uncertainty is visible without colour alone: a low-confidence cell has a marker and a reason.
 3. Every failure has its own message and a next step. No blank screens, no stack traces.
 4. Plain Tailwind and native form controls. No component library, no new dependency without an
-   entry in `local-map/DECISIONS.md`.
+   entry in `.local-map/DECISIONS.md`.
 5. Keyboard reachable, labelled controls, readable at 360 px wide.
 
 Verify by opening the app in a browser with a sample file: mapping panel, results table, one

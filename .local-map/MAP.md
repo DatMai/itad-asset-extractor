@@ -9,7 +9,7 @@ What is in the repository and where to change things. This file describes the co
 | `AGENTS.md`, `CLAUDE.md` | Rules and commands for coding agents. `CLAUDE.md` imports `AGENTS.md`. |
 | `.agent/` | Tool-neutral agent protocol (`PROTOCOL.md`) and live state (`HANDOFF.md`). |
 | `.claude/` | Claude Code skills (`skills/`) and subagent definitions (`agents/`). |
-| `local-map/` | This map, the journey log and the decision log. |
+| `.local-map/` | This map, the journey log and the decision log. |
 | `docs/` | `spec.md` (requirements), `research.md`, `plan.md`. |
 | `src/app/` | Next.js App Router entry: `layout.tsx`, `page.tsx`, `globals.css`. Still the scaffold. |
 | `public/` | Static files. Scaffold icons for now. |

@@ -13,20 +13,20 @@ One writer per area at a time. A reviewer never edits.
 | UI engineer | `src/app/**`, `src/components/**` | `src/lib/extraction/**` (ask for an API change instead) |
 | LLM engineer | `src/lib/llm/**`, `src/app/api/**` | the extraction pipeline |
 | Reviewer | nothing; reports findings | everything |
-| Anyone | `local-map/**`, `.agent/HANDOFF.md`, `docs/**`, `README.md` | |
+| Anyone | `.local-map/**`, `.agent/HANDOFF.md`, `docs/**`, `README.md` | |
 
 The contract between areas is the type file `src/lib/extraction/types.ts`. Changing a type there
 is a cross-area change: note it in `HANDOFF.md` before you do it.
 
 ## The loop
 
-1. **Orient.** Read `AGENTS.md`, `local-map/README.md`, then `.agent/HANDOFF.md`.
+1. **Orient.** Read `AGENTS.md`, `.local-map/README.md`, then `.agent/HANDOFF.md`.
 2. **Claim.** Add your task under "In progress" in `HANDOFF.md` with your role and the files you
    will touch. If someone already claimed those files, pick something else.
 3. **Work test-first.** Failing test, smallest change that passes, refactor.
 4. **Verify.** `pnpm typecheck && pnpm lint && pnpm test`. Read the output; do not assume.
-5. **Record.** Add a `local-map/JOURNEY.md` entry. Update `local-map/MAP.md` if files moved or
-   were added. Add a `local-map/DECISIONS.md` entry if you chose between real alternatives.
+5. **Record.** Add a `.local-map/JOURNEY.md` entry. Update `.local-map/MAP.md` if files moved or
+   were added. Add a `.local-map/DECISIONS.md` entry if you chose between real alternatives.
 6. **Hand off.** Move your task to "Done" in `HANDOFF.md`, list what the next agent should know,
    and commit.
 

@@ -48,4 +48,4 @@ result is a low-confidence value or an empty one, not a confident guess. Rule 1 
 
 ## 5. Record it
 
-Add one line to `local-map/JOURNEY.md`: the input that failed, the rule added, the test name.
+Add one line to `.local-map/JOURNEY.md`: the input that failed, the rule added, the test name.

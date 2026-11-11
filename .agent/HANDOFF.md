@@ -6,7 +6,7 @@ The state of the work, for whoever picks it up next. Format and rules: `.agent/P
 
 - **Branch:** `feat/asset-extraction` (`main` holds only the scaffold commit).
 - **Works:** the scaffolded Next.js app starts. Nothing project-specific is built yet.
-- **Written:** `docs/spec.md`, agent guides (`AGENTS.md`, `.agent/`, `.claude/`), `local-map/`.
+- **Written:** `docs/spec.md`, agent guides (`AGENTS.md`, `.agent/`, `.claude/`), `.local-map/`.
 - **Not done:** research summary, plan, the whole extraction pipeline, the UI, the LLM route,
   the README.
 - **Not verified:** nothing has been pushed or deployed.

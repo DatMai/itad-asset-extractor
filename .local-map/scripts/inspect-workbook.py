@@ -54,7 +54,7 @@ def dump_xlsx(path):
                 elif kind == "inlineStr":
                     value = text_of(c)
                 else:
-                    value = v.text if v is not None else ""
+                    value = (v.text or "") if v is not None else ""
                 formula = c.find("m:f", NS)
                 column = re.match(r"[A-Z]+", c.get("r")).group()
                 note = "" if kind in ("s", "inlineStr") else f"<{kind}>"

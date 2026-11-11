@@ -47,3 +47,7 @@ next-env.d.ts
 
 # pnpm store created when installing inside a sandbox
 .pnpm-store/
+
+# working folders of the research step; the kept copies are in .local-map/research
+/research_notes/
+/reports/

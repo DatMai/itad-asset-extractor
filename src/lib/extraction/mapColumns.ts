@@ -173,9 +173,9 @@ function nameScore(header: string, field: FieldDef): { score: number; reason: st
     return { score: 0.7 + 0.25 * share, reason: `"${header}" contains "${inside}"` };
   }
 
-  // 3. An abbreviation: one word that starts a known one-word name. "Manuf", "Loc", "Stor".
+  // 3. An abbreviation of a known one-word name: "Manuf", "Loc", "Mdl", "Scr".
   if (words.length === 1 && name.length >= 3) {
-    const full = known.find((synonym) => !synonym.includes(" ") && synonym.length >= name.length + 2 && synonym.startsWith(name));
+    const full = known.find((synonym) => !synonym.includes(" ") && synonym.length >= name.length + 2 && isAbbreviation(name, synonym));
     if (full) return { score: 0.8, reason: `"${header}" looks like an abbreviation of "${full}"` };
   }
 
@@ -191,6 +191,19 @@ function nameScore(header: string, field: FieldDef): { score: number; reason: st
   return null;
 }
 
+/**
+ * People shorten a word in two ways: they keep its beginning ("manuf") or its consonants
+ * ("mdl"). The second form is only accepted when the short word has no vowel at all, so that
+ * an ordinary word is not taken for shorthand ("date" is not "department").
+ */
+function isAbbreviation(short: string, full: string): boolean {
+  if (full.startsWith(short)) return true;
+  if (/[aeiou]/.test(short) || short[0] !== full[0]) return false;
+  let matched = 0; // letters of `short` found in `full`, in order
+  for (const letter of full) if (letter === short[matched]) matched++;
+  return matched === short.length;
+}
+
 /** For a header such as "CPU / RAM / Disk": the field each part names, or null if it is not a list. */
 function partsOfHeader(header: string): (FieldKey | null)[] | null {
   const pieces = header.split(/\s*[/|,&+]\s*|\s+and\s+/i);
@@ -198,6 +211,11 @@ function partsOfHeader(header: string): (FieldKey | null)[] | null {
   const parts = pieces.map((piece) => FIELD_KEYS.find((key) => nameScore(piece, FIELDS[key])?.score === 1) ?? null);
   const distinct = new Set(parts.filter((part) => part !== null));
   return distinct.size >= 2 ? parts : null;
+}
+
+/** True when a cell reads like the title of a column we know. Used to find the header row. */
+export function isKnownColumnName(text: string): boolean {
+  return TARGETS.some((target) => nameScore(text, definitionOf(target)) !== null) || partsOfHeader(text) !== null;
 }
 
 // --- Evidence from the values ------------------------------------------------------------------

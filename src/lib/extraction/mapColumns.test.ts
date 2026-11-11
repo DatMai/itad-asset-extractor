@@ -104,6 +104,16 @@ describe("mapColumns: names it has not seen exactly", () => {
     expect(map["Procesor"].confidence).toBeLessThan(0.9);
   });
 
+  it("reads consonant-only abbreviations", () => {
+    expect(targets(["Mdl", "Scr", "Brd", "Srl"], [])).toEqual({ Mdl: "model", Scr: "screenInches", Brd: "manufacturer", Srl: "serialNumber" });
+    expect(byHeader(["Mdl"], [], "Mdl").reason).toBe('"Mdl" looks like an abbreviation of "model"');
+  });
+
+  it("does not take an ordinary word for an abbreviation", () => {
+    // The letters of "date" appear in order in "department", but "Date" is a word, not shorthand.
+    expect(byHeader(["Date"], [], "Date").target).toBe("ignore");
+  });
+
   it("ignores unit words in a header", () => {
     expect(byHeader(["RAM (GB)"], [], "RAM (GB)")).toMatchObject({ target: "ramGB", confidence: 1 });
   });

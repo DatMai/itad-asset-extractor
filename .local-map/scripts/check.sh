@@ -14,7 +14,8 @@ status=0
 
 {
   echo "date:   $(date '+%Y-%m-%d %H:%M %Z')"
-  echo "commit: $(git rev-parse --short HEAD 2>/dev/null) $(git status --porcelain | grep -q . && echo '(with uncommitted changes)')"
+  # The evidence file is being rewritten right now, so it does not count as a change.
+  echo "commit: $(git rev-parse --short HEAD 2>/dev/null) $(git status --porcelain -- . ':!.local-map/evidence' | grep -q . && echo '(with uncommitted changes)')"
   echo "node:   $(node -v)   pnpm: $(pnpm -v)"
   for step in typecheck lint test; do
     echo

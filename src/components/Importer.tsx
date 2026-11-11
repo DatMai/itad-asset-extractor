@@ -33,12 +33,15 @@ export function Importer({ aiAvailable }: { aiAvailable: boolean }) {
   const [ai, setAi] = useState<Record<string, AiStatus>>({});
 
   // Extraction is a pure function of the plans, so a mapping change just runs it again.
-  const result = useMemo(() => {
+  const extracted = useMemo(() => {
     if (!loaded) return null;
-    const included = loaded.plans.filter((plan) => !loaded.excluded.has(plan.sheet.name));
-    const { assets, skipped } = extractAll(included);
-    return { assets: applyEdits(assets, edits), skipped };
-  }, [loaded, edits]);
+    return extractAll(loaded.plans.filter((plan) => !loaded.excluded.has(plan.sheet.name)));
+  }, [loaded]);
+  // Manual edits are laid over the extraction, so typing a correction does not re-read the file.
+  const result = useMemo(
+    () => extracted && { assets: applyEdits(extracted.assets, edits), skipped: extracted.skipped },
+    [extracted, edits],
+  );
 
   async function open(fileName: string, read: () => Promise<ArrayBuffer>) {
     setBusy(true);
@@ -140,8 +143,8 @@ export function Importer({ aiAvailable }: { aiAvailable: boolean }) {
     }
   }
 
-  const assetCounts: Record<string, number> = {};
-  for (const asset of result?.assets ?? []) assetCounts[asset.sheet] = (assetCounts[asset.sheet] ?? 0) + 1;
+  const assetCounts = new Map<string, number>();
+  for (const asset of result?.assets ?? []) assetCounts.set(asset.sheet, (assetCounts.get(asset.sheet) ?? 0) + 1);
 
   return (
     <div className="space-y-6">

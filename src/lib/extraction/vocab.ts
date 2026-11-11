@@ -234,8 +234,10 @@ export interface CpuMatch {
   hasModel: boolean;
 }
 
-/** "11th gen", "12th Generation": the only precision available when no model number is given. */
-export const CPU_GENERATION = /\b(\d{1,2})(?:st|nd|rd|th)\s+gen(?:eration)?\b/i;
+/** "11th gen" right after a CPU, or "11th Gen" right before it. */
+const GENERATION = String.raw`(\d{1,2})(?:st|nd|rd|th)\s+gen(?:eration)?`;
+const GENERATION_AFTER = new RegExp(String.raw`^[\s,]*${GENERATION}\b`, "i");
+const GENERATION_BEFORE = new RegExp(String.raw`\b${GENERATION}\s*$`, "i");
 
 /** Find the first CPU mentioned in a piece of text, or null. */
 export function findCpu(text: string): CpuMatch | null {
@@ -252,9 +254,18 @@ export function findCpu(text: string): CpuMatch | null {
       hasModel: tidy(match[rule.modelGroup]) !== "",
     };
   }
-  if (best && !best.hasModel) {
-    const generation = CPU_GENERATION.exec(text);
-    if (generation) best.name += ` ${generation[0].toLowerCase()}`;
+  if (!best || best.hasModel) return best;
+
+  // "Core i5 11th gen": with no model number, a generation next to the CPU is the only
+  // precision there is. It becomes part of the match. A generation elsewhere in the text
+  // ("X1 Carbon 7th Gen") belongs to the model and is left alone.
+  const after = GENERATION_AFTER.exec(text.slice(best.index + best.length));
+  const before = GENERATION_BEFORE.exec(text.slice(0, best.index));
+  if (after) {
+    return { ...best, name: `${best.name} ${after[1]}th gen`, length: best.length + after[0].length };
+  }
+  if (before) {
+    return { ...best, name: `${best.name} ${before[1]}th gen`, index: before.index, length: best.index + best.length - before.index };
   }
   return best;
 }
@@ -262,6 +273,10 @@ export function findCpu(text: string): CpuMatch | null {
 // --- Lookups ----------------------------------------------------------------------------------
 
 const wholeWords = (phrase: string) => new RegExp(String.raw`\b${phrase}\b`);
+
+// Built once: these lookups run for every cell of every row.
+const BRAND_PATTERNS = BRANDS.flatMap((brand) => brand.aliases.map((alias) => ({ brand, alias, pattern: wholeWords(alias) })));
+const LINE_PATTERNS = PRODUCT_LINES.map((entry) => ({ entry, pattern: wholeWords(entry.line) }));
 
 export interface BrandMatch {
   name: string;
@@ -274,21 +289,19 @@ export interface BrandMatch {
 /** Find the first brand named in normalised text. The longest alias wins at the same position. */
 export function findBrand(normalised: string): BrandMatch | null {
   let best: BrandMatch | null = null;
-  for (const brand of BRANDS) {
-    for (const alias of brand.aliases) {
-      const at = normalised.search(wholeWords(alias));
-      if (at === -1) continue;
-      const better = !best || at < best.index || (at === best.index && alias.length > best.length);
-      if (better) best = { name: brand.name, type: brand.type, index: at, length: alias.length };
-    }
+  for (const { brand, alias, pattern } of BRAND_PATTERNS) {
+    const at = normalised.search(pattern);
+    if (at === -1) continue;
+    const better = !best || at < best.index || (at === best.index && alias.length > best.length);
+    if (better) best = { name: brand.name, type: brand.type, index: at, length: alias.length };
   }
   return best;
 }
 
 /** Find a known product line ("thinkpad", "mac mini") in normalised text, with its position. */
 export function findProductLine(normalised: string) {
-  for (const entry of PRODUCT_LINES) {
-    const index = normalised.search(wholeWords(entry.line));
+  for (const { entry, pattern } of LINE_PATTERNS) {
+    const index = normalised.search(pattern);
     if (index !== -1) return { ...entry, index };
   }
   return null;

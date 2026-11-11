@@ -175,6 +175,9 @@ describe("normaliseCpu", () => {
     ["AMD Ryzen 5 PRO 5650U with Radeon Graphics", "AMD Ryzen 5 PRO 5650U"],
     ["Intel(R) Core(TM) i7-10700 CPU @ 2.90GHz", "Intel Core i7-10700"],
     ["11th Gen Intel(R) Core(TM) i5-1145G7 @ 2.60GHz", "Intel Core i5-1145G7"],
+    ["Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz", "Intel Xeon E5-2680 v4"],
+    ["Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz", "Intel Xeon Gold 6230"],
+    ["Intel Core i7-1185G7 Processor", "Intel Core i7-1185G7"],
   ])("%j -> %s", (raw, expected) => {
     const result = normaliseCpu(raw);
     expect(result.value).toBe(expected);
@@ -187,6 +190,7 @@ describe("normaliseCpu", () => {
       confidence: 0.6,
     });
     expect(normaliseCpu("i7")).toMatchObject({ value: "Intel Core i7", confidence: 0.6 });
+    expect(normaliseCpu("11th Gen Intel Core i5")).toMatchObject({ value: "Intel Core i5 11th gen", confidence: 0.6 });
   });
 
   it("keeps an unknown CPU as written, flagged", () => {

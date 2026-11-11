@@ -12,6 +12,9 @@ const BONUS_FIELDS = FIELD_KEYS.slice(8);
 
 type Tab = "computers" | "others" | "skipped";
 
+/** Rows drawn at first. A table of thousands of editable cells makes the page sluggish. */
+const ROWS_SHOWN_AT_FIRST = 200;
+
 interface Props {
   fileName: string;
   assets: Asset[];
@@ -56,7 +59,7 @@ export function ResultsPanel({ fileName, assets, skipped, onEdit, onKind }: Prop
 
       <TypeSummary computers={computers} />
 
-      <div role="tablist" aria-label="Rows" className="mt-4 flex flex-wrap gap-1 border-b border-slate-200">
+      <div role="group" aria-label="Which rows to show" className="mt-4 flex flex-wrap gap-1 border-b border-slate-200">
         <TabButton active={tab === "computers"} onClick={() => setTab("computers")}>Computers ({computers.length})</TabButton>
         <TabButton active={tab === "others"} onClick={() => setTab("others")}>Not computers ({others.length})</TabButton>
         <TabButton active={tab === "skipped"} onClick={() => setTab("skipped")}>Skipped rows ({skipped.length})</TabButton>
@@ -81,63 +84,76 @@ export function ResultsPanel({ fileName, assets, skipped, onEdit, onKind }: Prop
 }
 
 function AssetTable({ assets, tab, onEdit, onKind }: { assets: Asset[]; tab: Tab; onEdit: Props["onEdit"]; onKind: Props["onKind"] }) {
+  const [showAll, setShowAll] = useState(false);
   const bonus = BONUS_FIELDS.filter((key) => assets.some((asset) => asset.fields[key] !== undefined));
   const columns = [...CORE_FIELDS, ...bonus];
   const hasSeveralSheets = new Set(assets.map((asset) => asset.sheet)).size > 1;
+  const visible = showAll ? assets : assets.slice(0, ROWS_SHOWN_AT_FIRST);
 
   return (
-    <div className="relative mt-3 overflow-x-auto rounded-lg border border-slate-200">
-      <table className="w-full text-left text-sm">
-        <caption className="sr-only">Extracted assets</caption>
-        <thead className="bg-slate-50 text-xs text-slate-600 uppercase">
-          <tr>
-            <th scope="col" className="px-3 py-2 font-medium whitespace-nowrap">Source</th>
-            {tab === "others" && <th scope="col" className="px-3 py-2 font-medium whitespace-nowrap">Looks like</th>}
-            {columns.map((key) => (
-              <th key={key} scope="col" className="px-3 py-2 font-medium whitespace-nowrap">
-                {FIELDS[key].label}
-              </th>
-            ))}
-            <th scope="col" className="px-3 py-2 font-medium whitespace-nowrap">Remarks</th>
-            <th scope="col" className="px-3 py-2 font-medium"><span className="sr-only">Actions</span></th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {assets.map((asset) => (
-            <tr key={asset.id} className="hover:bg-slate-50">
-              <td className="px-3 py-1 whitespace-nowrap text-slate-600">
-                {hasSeveralSheets && `${asset.sheet} · `}row {asset.rowNumber}
-              </td>
-              {tab === "others" && <td className="px-3 py-1 whitespace-nowrap">{asset.kindReason}</td>}
+    <>
+      <div className="relative mt-3 overflow-x-auto rounded-lg border border-slate-200">
+        <table className="w-full text-left text-sm">
+          <caption className="sr-only">Extracted assets</caption>
+          <thead className="bg-slate-50 text-xs text-slate-600 uppercase">
+            <tr>
+              <th scope="col" className="px-3 py-2 font-medium whitespace-nowrap">Source</th>
+              {tab === "others" && <th scope="col" className="px-3 py-2 font-medium whitespace-nowrap">Looks like</th>}
               {columns.map((key) => (
-                <ValueCell key={key} fieldKey={key} label={FIELDS[key].label} field={asset.fields[key]} onSave={(text) => onEdit(asset.id, key, text)} />
+                <th key={key} scope="col" className="px-3 py-2 font-medium whitespace-nowrap">
+                  {FIELDS[key].label}
+                </th>
               ))}
-              <td className="max-w-xs px-3 py-1 text-slate-700">
-                {asset.warnings.map((warning) => (
-                  <span key={warning} className="mr-2 text-amber-800">
-                    ⚠ {warning}
-                  </span>
-                ))}
-                {Object.entries(asset.extras).map(([header, value]) => (
-                  <span key={header} className="mr-2 whitespace-nowrap text-slate-500" title="A column that is not mapped to a field">
-                    {header}: {value}
-                  </span>
-                ))}
-              </td>
-              <td className="px-3 py-1 whitespace-nowrap">
-                <button
-                  type="button"
-                  onClick={() => onKind(asset.id, tab === "others" ? "computer" : "not-a-computer")}
-                  className="text-xs text-sky-700 underline hover:text-sky-900"
-                >
-                  {tab === "others" ? "It is a computer" : "Not a computer"}
-                </button>
-              </td>
+              <th scope="col" className="px-3 py-2 font-medium whitespace-nowrap">Remarks</th>
+              <th scope="col" className="px-3 py-2 font-medium"><span className="sr-only">Actions</span></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {visible.map((asset) => (
+              <tr key={asset.id} className="hover:bg-slate-50">
+                <td className="px-3 py-1 whitespace-nowrap text-slate-600">
+                  {hasSeveralSheets && `${asset.sheet} · `}row {asset.rowNumber}
+                </td>
+                {tab === "others" && <td className="px-3 py-1 whitespace-nowrap">{asset.kindReason}</td>}
+                {columns.map((key) => (
+                  <ValueCell key={key} fieldKey={key} label={FIELDS[key].label} field={asset.fields[key]} onSave={(text) => onEdit(asset.id, key, text)} />
+                ))}
+                <td className="max-w-xs px-3 py-1 text-slate-700">
+                  {asset.warnings.map((warning) => (
+                    <span key={warning} className="mr-2 text-amber-800">
+                      ⚠ {warning}
+                    </span>
+                  ))}
+                  {Object.entries(asset.extras).map(([header, value]) => (
+                    <span key={header} className="mr-2 whitespace-nowrap text-slate-500" title="A column that is not mapped to a field">
+                      {header}: {value}
+                    </span>
+                  ))}
+                </td>
+                <td className="px-3 py-1 whitespace-nowrap">
+                  <button
+                    type="button"
+                    onClick={() => onKind(asset.id, tab === "others" ? "computer" : "not-a-computer")}
+                    className="text-xs text-sky-700 underline hover:text-sky-900"
+                  >
+                    {tab === "others" ? "It is a computer" : "Not a computer"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {visible.length < assets.length && (
+        <p className="mt-2 text-sm text-slate-700">
+          Showing the first {visible.length} of {assets.length} rows.{" "}
+          <button type="button" onClick={() => setShowAll(true)} className="text-sky-700 underline hover:text-sky-900">
+            Show all
+          </button>{" "}
+          (the downloads always contain every row)
+        </p>
+      )}
+    </>
   );
 }
 
@@ -207,8 +223,7 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
   return (
     <button
       type="button"
-      role="tab"
-      aria-selected={active}
+      aria-pressed={active}
       onClick={onClick}
       className={`-mb-px rounded-t-md border-b-2 px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-sky-500 ${
         active ? "border-sky-600 text-sky-800" : "border-transparent text-slate-600 hover:text-slate-900"

@@ -11,7 +11,6 @@ import { tidyCpuText, toGB, toUnit, type CapacityUnit } from "./normalise";
 import { cleanText, normaliseText, round, stripAccents } from "./text";
 import type { AssetType } from "./types";
 import {
-  CPU_GENERATION,
   findBrand,
   findCpu,
   findNonComputerWord,
@@ -94,7 +93,6 @@ export function parseFreeText(text: string): ParsedText {
       note: cpu.hasModel ? undefined : "No model number given",
     };
     cut(cpu.index, cpu.length);
-    rest = rest.replace(CPU_GENERATION, " | ");
   }
 
   // 2. Screen size: the first number with an inch mark that is a believable size.

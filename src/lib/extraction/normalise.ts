@@ -168,9 +168,14 @@ export function normaliseManufacturer(raw: string): Normalised<string> {
 
 // --- CPU --------------------------------------------------------------------------------------
 
-/** Remove the noise of system exports: "Intel(R) Core(TM) i7-10700 CPU @ 2.90GHz". */
+/** Remove the noise of system exports: "Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz". */
 export function tidyCpuText(text: string): string {
-  return cleanText(text.replace(/\((?:R|TM|C)\)|[®™©]/gi, " ").replace(/@\s*\d+(?:\.\d+)?\s*GHz/gi, " "));
+  return cleanText(
+    text
+      .replace(/\((?:R|TM|C)\)|[®™©]/gi, " ") // trademark marks
+      .replace(/@\s*\d+(?:\.\d+)?\s*GHz/gi, " ") // clock speed
+      .replace(/\b(?:CPU|Processor)\b/gi, " "), // the word itself, which can sit inside the name
+  );
 }
 
 export function normaliseCpu(raw: string): Normalised<string> {

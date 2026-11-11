@@ -49,6 +49,9 @@ const PARSED_KEYS = ["manufacturer", "model", "assetType", "cpu", "ramGB", "stor
 /** A row needs at least one of these to count as an asset; a person and a place are not enough. */
 const IDENTIFYING: FieldKey[] = ["model", "serialNumber", "manufacturer", "cpu", "ramGB", "storageGB", "assetTag", "assetType"];
 
+/** Column names that mean "how many devices this row stands for". */
+const QUANTITY_NAMES = ["qty", "quantity", "count", "units", "no of units", "so luong", "sl"];
+
 /** "TOTAL", "Sub-total", "Count", "Tổng cộng" at the start of a nearly empty row. */
 const SUMMARY_WORD = /^((grand|sub) ?)?totals?\b|^(sum|count|tong|tong cong)\b/;
 
@@ -57,6 +60,7 @@ export function extractSheet(plan: SheetPlan): { assets: Asset[]; skipped: Skipp
   const headerRow = header.rowIndex === null ? null : sheet.rows[header.rowIndex];
   const firstDataRow = header.rowIndex === null ? 0 : header.rowIndex + 1;
   const hasSerialColumn = columns.some((column) => column.target === "serialNumber");
+  const quantityColumn = columns.find((column) => column.target === "ignore" && QUANTITY_NAMES.includes(normaliseText(column.header)));
   const assets: Asset[] = [];
   const skipped: SkippedRow[] = [];
 
@@ -90,6 +94,9 @@ export function extractSheet(plan: SheetPlan): { assets: Asset[]; skipped: Skipp
     if (asset.kind === "computer" && hasSerialColumn && !asset.fields.serialNumber?.value) {
       asset.warnings.push("No serial number");
     }
+    // We output one asset per row. A quantity above 1 means the list undercounts, so say it.
+    const quantity = quantityColumn ? Number(row[quantityColumn.index]) : 1;
+    if (quantity > 1) asset.warnings.push(`This row stands for ${quantity} devices`);
     assets.push(asset);
   }
   return { assets, skipped };

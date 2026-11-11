@@ -97,4 +97,15 @@ describe("detectHeader", () => {
     const guess = detectHeader([["Devices for collection - March"], ["Device"], ["Dell Lat 5420 i7 16GB"], ["Cisco Catalyst 2960 switch"]]);
     expect(guess.rowIndex).toBe(1);
   });
+
+  it("does not take a label row for a header when the table itself has none", () => {
+    const data = [
+      ["Laptop", "Dell", "Latitude 5420", "7HKQ2M3", "i7-1185G7", "16GB", "512GB SSD"],
+      ["Desktop", "HP", "ProDesk 400 G7", "4CE0471ABC", "i5-10500", "8GB", "1TB HDD"],
+    ];
+    // A title above the data: far narrower than the rows under it.
+    expect(detectHeader([["Location:", "Sydney"], ...data]).rowIndex).toBeNull();
+    // A footer below the data: nothing under it.
+    expect(detectHeader([...data, [], ["Notes:", "call Kevin before collection"]]).rowIndex).toBeNull();
+  });
 });

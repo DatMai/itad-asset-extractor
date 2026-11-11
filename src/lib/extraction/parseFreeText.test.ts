@@ -200,6 +200,20 @@ describe("parseFreeText: things that look like specs but are not", () => {
   });
 });
 
+describe("parseFreeText: generation words", () => {
+  it("keeps a generation that belongs to the model", () => {
+    const parsed = parseFreeText("Lenovo ThinkPad X1 Carbon 7th Gen i7-8565U 16GB 512GB SSD");
+    expect(parsed.model?.value).toBe("ThinkPad X1 Carbon 7th Gen");
+    expect(parsed.cpu?.value).toBe("Intel Core i7-8565U");
+  });
+
+  it("uses a generation written next to a CPU that has no model number", () => {
+    const parsed = parseFreeText("HP EliteBook 840 G8 Core i5 11th gen 8GB 256GB");
+    expect(parsed.cpu?.value).toBe("Intel Core i5 11th gen");
+    expect(parsed.model?.value).toBe("EliteBook 840 G8");
+  });
+});
+
 describe("parseFreeText: inference from product lines", () => {
   it("infers the manufacturer and type from the line, and marks them as inferred", () => {
     const parsed = parseFreeText("ThinkPad T480 i5-8350U 8GB 256GB SSD");

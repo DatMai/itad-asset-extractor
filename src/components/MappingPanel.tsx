@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { COMBINED, FIELDS } from "@/lib/extraction/fields";
 import { columnLetter } from "@/lib/extraction/mapColumns";
 import { FIELD_KEYS, LOW_CONFIDENCE, type ColumnMapping, type ColumnTarget, type SheetPlan } from "@/lib/extraction/types";
@@ -10,7 +11,7 @@ interface Props {
   /** Names of the sheets left out of the results. */
   excluded: Set<string>;
   /** Sheet name -> number of assets found in it. */
-  assetCounts: Record<string, number>;
+  assetCounts: Map<string, number>;
   onTarget: (sheet: string, columnIndex: number, target: ColumnTarget) => void;
   /** A row index, null for "no header row", or "auto" to detect it again. */
   onHeaderRow: (sheet: string, row: number | null | "auto") => void;
@@ -36,7 +37,7 @@ export function MappingPanel({ plans, excluded, assetCounts, onTarget, onHeaderR
             key={plan.sheet.name}
             plan={plan}
             included={!excluded.has(plan.sheet.name)}
-            assetCount={assetCounts[plan.sheet.name] ?? 0}
+            assetCount={assetCounts.get(plan.sheet.name) ?? 0}
             onTarget={(columnIndex, target) => onTarget(plan.sheet.name, columnIndex, target)}
             onHeaderRow={(row) => onHeaderRow(plan.sheet.name, row)}
             onToggle={() => onToggleSheet(plan.sheet.name)}
@@ -63,6 +64,8 @@ function SheetCard({ plan, included, assetCount, onTarget, onHeaderRow, onToggle
   const used = columns.filter((column) => column.target !== "ignore");
   const toCheck = used.filter((column) => column.confidence < LOW_CONFIDENCE).length;
   const headerId = `header-row-${sheet.name}`;
+  // React would re-open a <details> on every render if "open" were fixed, so the user's choice is kept in state.
+  const [showColumns, setShowColumns] = useState(true);
 
   // The rows a user could pick as the header: the first 30 that contain anything.
   const candidateRows = sheet.rows
@@ -113,7 +116,7 @@ function SheetCard({ plan, included, assetCount, onTarget, onHeaderRow, onToggle
         {columns.length === 0 ? (
           <p className="text-sm text-slate-600">This sheet has no columns to read.</p>
         ) : (
-          <details open className="group">
+          <details open={showColumns} onToggle={(event) => setShowColumns(event.currentTarget.open)}>
             <summary className="cursor-pointer text-sm font-medium text-slate-700 select-none">
               {used.length} of {columns.length} columns used
               {toCheck > 0 && <span className="ml-2 text-amber-800">· ⚠ {toCheck} to check</span>}

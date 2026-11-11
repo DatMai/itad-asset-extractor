@@ -354,3 +354,20 @@ describe("a Model column that holds more than the model", () => {
     expect(assets[1].fields.manufacturer?.source).toBe("inferred");
   });
 });
+
+describe("a quantity column", () => {
+  it("warns when one row stands for several devices", () => {
+    const sheet = {
+      name: "S",
+      hidden: false,
+      rows: [
+        ["Model", "Qty", "RAM"],
+        ["Dell Latitude 5420", "12", "16GB"],
+        ["HP ProDesk 400 G7", "1", "8GB"],
+        ["Lenovo ThinkPad T14", "", "16GB"],
+      ],
+    };
+    const { assets } = extractSheet(planSheet(sheet));
+    expect(assets.map((asset) => asset.warnings)).toEqual([["This row stands for 12 devices"], [], []]);
+  });
+});

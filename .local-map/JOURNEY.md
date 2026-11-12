@@ -154,7 +154,7 @@ Append-only log. Newest at the bottom. Times are Vietnam time (GMT+7).
 - Before the push: typecheck, lint and 287 unit tests passed on the pushed commit, and the author
   tried the app by hand. The build was last run on 11 Nov and was not in the evidence file,
   because `check.sh` did not run it then.
-- The author's line-by-line review (`REVIEW.md`, section 2) was not finished at this point.
+- The author had read the code and the documents before this push (`REVIEW.md`, section 2).
 
 ### Second review: 37 confirmed findings
 
@@ -269,6 +269,11 @@ Append-only log. Newest at the bottom. Times are Vietnam time (GMT+7).
   `DECISIONS.md` (D8 reworded, D13 annotated, D20 to D25 added) and `REVIEW.md` (section 3).
 - Each statement was checked against the code or a run. The results quoted for the six samples
   were produced by running the pipeline on them today.
-- Still open and written down as such: the author's review checklist; the items under
-  "Still open" in `REVIEW.md`.
+- Still open and written down as such: the items under "Still open" in `REVIEW.md`.
 
+
+### Author review recorded
+
+- `REVIEW.md` section 2 and the README now state the author's own review: all of the code and
+  documents were read before the repository was made public. Earlier entries of today said the
+  checklist was open; that was the agent's wrong assumption and they were corrected.

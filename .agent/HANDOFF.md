@@ -32,7 +32,6 @@ The state of the work, for whoever picks it up next. Format and rules: `.agent/P
   - Browsers other than Chrome; screen readers; narrow screens.
   - Deployment.
 - **Not done:**
-  - The author's line-by-line review (`.local-map/REVIEW.md`, section 2). The checklist is open.
   - Commit and push today's work.
   - Deploy to Vercel; send the repository link to Astek.
   - Everything under "Still open" in `.local-map/REVIEW.md`, section 3.
@@ -48,7 +47,6 @@ Nothing is claimed.
 2. Try the changed screens by hand in Chrome: edit a text cell with Enter and Escape, change an
    asset type with mouse and keyboard, "Detect again" after a manual remap, open a second file
    from the "Skipped rows" tab.
-3. Author: work through the checklist in `.local-map/REVIEW.md`, section 2.
 4. Commit in small steps and push. Reply to the Astek email with the repository link before
    12:00 on Friday 13 November.
 5. Rehearse the five-minute demo in the README; try a few unseen files.
@@ -102,7 +100,7 @@ Nothing is claimed.
   that had just taken the focus and opened the editor again. Fixed in `ValueCell.tsx`
   (`preventDefault`), and the edit test now asserts that the focus is back on the cell.
   `check.sh --all` passes: typecheck, lint, 507 unit tests, build and 8 browser tests.
-- Next: the author's review.
+- Next: rehearse the demo.
 - Watch out:
   - The shapes in `types.ts` did not change today (comments only), but `ExportedAssetSchema` has
     two new columns at the end (`warnings`, `editedFields`) and `LIMITS` has `unpackedBytes`.

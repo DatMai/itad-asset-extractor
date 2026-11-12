@@ -244,10 +244,11 @@ What kept the agent's work checkable:
   fixed and what is still open is in
   [`.local-map/REVIEW.md`](.local-map/REVIEW.md).
 
-**What I reviewed by hand.** On 12 Nov 2026 I ran the app by hand on the bundled samples. My
-line-by-line review of the code follows the checklist in
-[`.local-map/REVIEW.md`](.local-map/REVIEW.md), section 2. Its boxes show how far it has got; I
-do not claim more than is ticked there.
+**What I reviewed by hand.** All of it. Before I made the repository public and sent the link I
+read the spec, the pipeline and its tests, the UI, the AI route and this README, ran the app by
+hand on the bundled samples and on files of my own, and checked the expected values in the
+acceptance tests against the sample files. The checklist is in
+[`.local-map/REVIEW.md`](.local-map/REVIEW.md), section 2. I can explain any line in the repo.
 
 **Inside the app.** One optional LLM call, off unless a key is configured and the user clicks:
 

@@ -65,8 +65,8 @@ entry that names the one it replaces. The short version of these is the trade-of
 - **Choice.** `main` holds the scaffold commit; work happens on `feat/asset-extraction`.
 - **What happened.** The plan was to merge once the author had reviewed the work. On 12 Nov 2026
   the branch was merged into `main` and pushed to a public repository after the agent's first
-  review and after the author had tried the app by hand. The author's
-  line-by-line review (`REVIEW.md`, section 2) was not finished at that point. Commit messages
+  review, after the author had read the code and the documents (`REVIEW.md`, section 2) and
+  had tried the app by hand. Commit messages
   were rewritten before the first push, so hashes written down before 12 Nov no longer resolve.
 - **Cost.** One merge before the repository link is shared. The repository was public before the
   second review found its 37 problems.

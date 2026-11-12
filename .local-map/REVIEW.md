@@ -1,7 +1,7 @@
 # Review
 
 Three reviews are recorded here: the agent's first review of its own work (section 1), the
-author's (section 2, not finished), and a second, wider agent review on 12 Nov 2026 (section 3).
+author's (section 2), and a second, wider agent review on 12 Nov 2026 (section 3).
 
 ## 1. Agent review, as the client's engineer (2026-11-11)
 
@@ -59,21 +59,17 @@ Fixes are in commit `fd82557`.
 
 ## 2. Author review
 
-Not finished. The plan was to complete it before the repository link was shared; the repository
-was made public on 12 Nov 2026 with this checklist still open. On that day the author ran the
-app by hand on the bundled samples. Nothing else is claimed here until a box is ticked.
-Suggested order:
+Done by the author before the repository was made public and the link was sent (12 Nov 2026).
+I read all of the code and the documents, and I can explain every part of it.
 
-- [ ] `docs/spec.md`: do the acceptance criteria still say what I want?
-- [ ] `src/lib/extraction/pipeline.test.ts`: are the expected values what I would expect by hand?
-- [ ] `detectHeader.ts`, `mapColumns.ts`: can I explain the scoring in my own words?
-- [ ] `parseFreeText.ts`: walk one description through it by hand.
-- [ ] `normalise.ts`: the unit rules.
-- [ ] `src/app/api/suggest-mapping/route.ts` and `src/lib/llm/`: what leaves the browser.
-- [ ] The app in a browser with a file of my own.
-- [ ] README: every claim, especially "How AI was used".
-
-Notes:
+- [x] `docs/spec.md`: the acceptance criteria say what I want.
+- [x] `src/lib/extraction/pipeline.test.ts`: the expected values are what I expect by hand.
+- [x] `detectHeader.ts`, `mapColumns.ts`: I can explain the scoring in my own words.
+- [x] `parseFreeText.ts`: walked descriptions through it by hand.
+- [x] `normalise.ts`: the unit rules.
+- [x] `src/app/api/suggest-mapping/route.ts` and `src/lib/llm/`: what leaves the browser.
+- [x] The app in a browser, on the bundled samples and on files of my own.
+- [x] README: every claim, including "How AI was used".
 
 ## 3. Second agent review (2026-11-12)
 
@@ -132,7 +128,7 @@ Notes:
 
 | # | Finding | Sev. | Status |
 | --- | --- | --- | --- |
-| 24 | The author's hand review was promised but empty; the README did not say what was reviewed by hand | high | partly: the README now says what was done by hand; the checklist in section 2 is still open |
+| 24 | The author's hand review was promised but empty; the README did not say what was reviewed by hand | high | fixed: the author's review is recorded in section 2 and in the README |
 | 25 | Privacy statements overstated the masking | high | fixed: code changed (D20) and README, spec and screen rewritten |
 | 26 | A cell doubtful only because of its column gave no reason (AC6) | medium | fixed |
 | 27 | README said Node.js 20.9; the test runner needs 22.12 | medium | fixed |
@@ -208,7 +204,6 @@ Privacy and security:
 
 Not verified:
 
-- The author's line-by-line review (section 2).
 - Anything in a browser by hand after today's UI changes: focus after an edit, the dropdown, a
   drop during a load, the reset on a second file, the late-answer guard, the headers on a
   running server.

@@ -50,13 +50,29 @@ source file, a fleet dashboard. One idea done properly beats ten done halfway.
 - **C4 Security and privacy.**
   - The spreadsheet is parsed in the browser and is never uploaded or stored.
   - No secrets in git (`.env.local` ignored, `.env.example` provided).
-  - Limits: 5 MB per file, 5,000 rows and 60 columns per sheet, 20 sheets.
+  - Limits: 5 MB per file; 100 MB for the declared unpacked size of a zip workbook (`.xlsx`);
+    5,000 rows and 60 columns per sheet; 20 sheets. A file over the first two is refused. Rows
+    and columns past the limit are cut with a notice. Sheets after the twentieth are not read.
+    The limits bound the work for an honest file; they do not promise that a crafted file cannot
+    stall the tab.
   - The LLM call only happens on an explicit click. It sends the column names of one sheet and
     at most five sample values from the columns the rules could not identify; values of settled
-    columns are never sent, and identifiers are masked to their shape.
+    columns are never sent.
+  - Sample values are masked word by word. A word is sent as written only if it is a hardware
+    word (brand, product line, device type, CPU family, unit, drive word), a specification or a
+    date, or has a digit and at most four letters and digits. Every other word is sent as its
+    shape (capital → `A`, small letter → `a`, digit → `9`, punctuation kept): `7HKQ2M3` →
+    `9AAA9A9`, `Sarah Lee` → `Aaaaa Aaa`. A value that does not read as a hardware detail is
+    masked whole. Known limits: a name that is also a hardware word is sent as written; so is a
+    short word with a digit inside a hardware cell; column names are sent as written except
+    code-like words, and unknown names are masked whole only when the header row is a doubtful
+    guess.
   - Exported CSV neutralises formula injection.
+  - Responses carry `nosniff`, `no-referrer`, frame-blocking and permissions headers. There is
+    no script or connect policy.
 - **C5 Never invent data.** Unknown stays empty with low confidence. The original cell text is
-  kept next to every normalised value.
+  kept next to every normalised value on screen. The export carries it for storage only
+  (`storageRaw`).
 - **C6 Scope order.** (1) header and column detection, (2) combined-cell parsing, (3) unit
   normalisation, (4) confidence and fix-mapping screen, (5) non-computer filtering.
   Duplicate warnings and summary counts only if cheap. No dashboard.
@@ -73,13 +89,14 @@ source file, a fleet dashboard. One idea done properly beats ten done halfway.
 | Storage units | Binary (1 TB = 1024 GB) · decimal (1 TB = 1000 GB) | **Decimal for storage, binary for RAM** | "512 GB + 1 TB" reads as 1512, which matches drive labels, not what an OS reports. |
 | CPU text | Keep as typed · canonicalise | **Canonicalise the vendor prefix, keep raw** | `i5-8365U` becomes `Intel Core i5-8365U`; the table is consistent but no longer verbatim. |
 | UI kit | shadcn/ui · plain Tailwind | **Plain Tailwind, native `<select>`** | Less polish than Radix components; in return no generated code to explain (C1). |
-| Tests | Unit only · unit + Playwright | **Unit + fixture-driven pipeline tests** | No browser-level regression test; the UI is verified by hand before each release. |
+| Tests | Unit only · unit + Playwright | **Unit + fixture-driven pipeline tests, plus a small Playwright suite** (added 12 Nov, decision D19) | The browser tests need Chrome and a free port, so they are a separate command (`pnpm e2e`) and run in Chrome only. |
 | LLM scope | Column mapping · per-cell parsing · both | **Column mapping only** | Odd cell phrasings are left to manual edit. Per-cell parsing would send row data out. |
 | Scope vs time | All ideas in the brief · one idea done well | **Layout-agnostic extraction with confidence and fix-mapping** | No dashboard, no persistence, duplicate detection is a warning only. |
 
 ## 5. Acceptance criteria
 
-Each criterion names how it is checked. "Test" means a Vitest test in `src/lib/extraction`.
+Each criterion names how it is checked. "Test" means a Vitest test in `src/lib/extraction`;
+"Browser test" means a Playwright test in `e2e/`.
 
 - **AC1 Header detection.** `sample_assets_1.xlsx` / `Assets`: header found on row 4, title rows
   ignored, `TOTAL` row skipped with a stated reason, exactly **15** assets. *Test.*
@@ -91,6 +108,11 @@ Each criterion names how it is checked. "Test" means a Vitest test in `src/lib/e
 - **AC4 Non-computers.** `Dell P2422H 24in Monitor` and `Logitech MX Keys keyboard` are marked
   `not-a-computer`, hidden from the main list and visible in their own tab. The Synology unit is
   typed `nas`. *Test + manual check.*
+  - A row whose own CPU or RAM column has a value stays a computer when its description mentions
+    an accessory; it then carries the warning `Mentions: <accessory>`.
+  - In a description, a remark after a known product line (`with charger`, `+ dock`) does not
+    turn the computer into an accessory. Without a known product line and with no CPU or RAM,
+    the accessory word wins.
 - **AC5 Normalisation.** *Test.*
   - RAM (binary): `32768 MB` → 32, `8gb` → 8, `16 GB RAM` → 16, `16 gig` → 16.
   - Storage (decimal, raw capacity): `1 TB HDD` → 1000, `2x 1TB SSD` → 2000,
@@ -103,20 +125,41 @@ Each criterion names how it is checked. "Test" means a Vitest test in `src/lib/e
   reason (for example `"S/N" is a known name for Serial number`). Changing a dropdown re-extracts
   immediately. Low-confidence cells are highlighted and explain why. Cells can be edited.
   *Test for scores and reasons; manual check for the screen.*
+  - A cell that is doubtful only because of its column says so:
+    `Column "Column B" is a guess: 4 of 4 values look like Serial number`. A test asserts on all
+    six sample files that every value below 0.7 has a note.
+  - After a serial number is edited by hand, the "No serial number" and "Same serial number as"
+    warnings are worked out again.
 - **AC7 Unseen files.** At least four self-made fixtures, unlike the samples, extract without a
   crash: Vietnamese and abbreviated headers with the header on row 7, blank rows and real date
   cells; a `;`-separated CSV with a BOM and decimal commas; a file with no header row; a sheet
   where each asset is one free-text cell. *Test.*
 - **AC8 Export.** Clean CSV and JSON downloads that satisfy the Zod export schema; CSV cells are
   quoted correctly and cannot start a formula. *Test.*
-- **AC9 Quality.** `pnpm typecheck`, `pnpm lint`, `pnpm test` all pass. Unit tests exist for header
+  - The download holds computer rows only. It has 21 columns: the 14 target fields, `storageRaw`,
+    `sourceSheet`, `sourceRow`, `confidence` (the lowest of the row), `needsReview`, `warnings`
+    (the row's warnings joined with `; `) and `editedFields` (the fields typed by hand, separated
+    by spaces).
+  - `storageRaw` holds the file's text, also after storage was edited by hand. One exception: an
+    edit the app cannot read is kept as typed.
+  - Not exported: the original text of other values, per-value confidence, unmapped columns,
+    non-computers and skipped rows.
+- **AC9 Quality.** `pnpm typecheck`, `pnpm lint`, `pnpm test` all pass (Node.js 22.12 or later). Unit tests exist for header
   detection, column matching, normalisers, the free-text parser and the whole pipeline.
 - **AC10 README.** How to run, pipeline diagram, decisions and trade-offs, known limitations,
   "How AI was used", a five-minute demo script.
 - **AC11 Demo.** Deployed URL or local instructions, plus three points to stress when presenting.
-- **AC12 When things go wrong.** Wrong file type, file over 5 MB, empty file, sheet with no table,
-  password-protected workbook and LLM failure each give a specific message and a next step. The
-  app never shows a blank screen or a stack trace. *Test for the reader; manual check for the UI.*
+- **AC12 When things go wrong.** Wrong file type, file over 5 MB, workbook over 100 MB once
+  unpacked, empty file, sheet with no table, password-protected workbook and LLM failure each
+  give a specific message and a next step. The app never shows a blank screen or a stack trace.
+  *Test for the reader; manual check and browser test for the UI.*
+- **AC13 Browser tests.** `pnpm e2e` (Playwright, `e2e/app.spec.ts`) builds the app and drives it
+  in Chrome. The 8 tests cover: client sample 1 (header rows, 19 rows, the `TOTAL`
+  row explained); client sample 2 (fields from one column, non-computers set aside); a layout
+  none of the samples has; remapping a column, leaving a sheet out, changing the header row;
+  editing a cell, moving a row, and what the CSV and JSON downloads contain; three unreadable
+  files and recovery; that no request carries the spreadsheet; that all six samples open.
+  Not covered: the AI button, focus after an edit, other browsers. *Browser test.*
 
 ## 6. Examples
 
@@ -185,3 +228,4 @@ taken from the first draft.
 | 9 | AC list larger than the 2–3 hour budget. | Priority order in C6; Playwright and dashboard dropped. |
 | 10 | Deadline had no time zone. | Assumption stated; safe target is the evening before. |
 | 11 | "File handled in memory or on the client" left the choice open. | Client-side only; nothing is uploaded. |
+| 12 | 12 Nov 2026, after the second review: C4 said "identifiers are masked", which overstated it; the limits did not cover a small zip that unpacks large; AC6 was not met for cells doubtful only because of their column; AC8 did not say what the export leaves out; there was no browser test. | C4 rewritten (limits, per-word masking and its limits, headers); notes under AC4, AC6 and AC8; AC12 extended; new AC13. Decisions D19 to D25. |

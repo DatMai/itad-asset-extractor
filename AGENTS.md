@@ -22,9 +22,9 @@ Any agent (Claude Code, Codex, Copilot, Cursor) starts here. Humans can read it 
 ## What this project is
 
 A Next.js app that reads a messy spreadsheet of IT assets in the browser and turns it into a clean
-table: one row per asset, with a confidence score and the original text beside every value. The
-value of the project is the extraction pipeline in `src/lib/extraction`; the UI is a thin layer on
-top of it.
+table: one row per asset, with a confidence score and, on screen, the original text beside every
+value. The value of the project is the extraction pipeline in `src/lib/extraction`; the UI is a
+thin layer on top of it.
 
 ## Commands
 
@@ -36,8 +36,10 @@ top of it.
 | `pnpm typecheck` | `tsc --noEmit` |
 | `pnpm lint` | ESLint |
 | `pnpm build` | Production build |
+| `pnpm e2e` | Browser tests (Playwright). Builds the app, serves it on port 3100, drives the installed Chrome |
 | `pnpm fixtures` | Regenerate the self-made sample files in `public/samples/` |
-| `.local-map/scripts/check.sh` | Run typecheck, lint and tests, and save the output as evidence |
+| `.local-map/scripts/check.sh` | Run typecheck, lint and unit tests, and save the output as evidence |
+| `.local-map/scripts/check.sh --all` | The same, then `pnpm e2e` (which also builds). Needs a local port, so not inside a sandbox |
 | `python3 -I .local-map/scripts/inspect-workbook.py <file>` | Print what a spreadsheet file really stores |
 
 ## Rules
@@ -60,6 +62,9 @@ top of it.
 ## Definition of done
 
 - `pnpm typecheck && pnpm lint && pnpm test` pass, and you have seen the output yourself.
+  Node.js 22.12 or later is needed.
+- A change to `src/app`, `src/components` or `e2e` also passes `pnpm e2e`. If you cannot run it
+  (no Chrome, no local port), say so in the handoff; do not call the change verified.
 - The change is described in `.local-map/JOURNEY.md`; `.local-map/MAP.md` matches the code.
 - `.agent/HANDOFF.md` says what changed and what the next agent should pick up.
 - Commits are small, with a message that says why.

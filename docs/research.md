@@ -9,7 +9,7 @@ the raw notes are in [`.local-map/research/notes/`](../.local-map/research/notes
 | Library | State | Verdict |
 | --- | --- | --- |
 | `xlsx` on npm | Frozen at 0.18.5 (2022); inside [CVE-2023-30533](https://github.com/advisories/GHSA-4r6h-8v6p-xvw6) and [CVE-2024-22363](https://github.com/advisories/GHSA-5pgg-2g8v-p4x9) | Do not use |
-| **SheetJS 0.20.3 from [its CDN](https://docs.sheetjs.com/docs/getting-started/installation/nodejs)** | Both CVEs fixed; reads xlsx, xls, csv; 335 KB gzip; no release since Jul 2024 | **Chosen** |
+| **SheetJS 0.20.3 from [its CDN](https://docs.sheetjs.com/docs/getting-started/installation/nodejs)** | Both CVEs fixed; reads xlsx, xls, csv; 335 KB gzip as a standalone full build (128 KB gzip as measured in this app's lazy chunk); no release since Jul 2024 | **Chosen** |
 | exceljs 4.4.0 | Four CVEs published Aug 2026 ([example](https://www.cve.org/CVERecord?id=CVE-2026-78207)), no upstream fix | Do not use |
 | read-excel-file + Papa Parse | Maintained, 21 KB together, no `.xls` | Fallback if SheetJS must go |
 

@@ -17,6 +17,7 @@ Write the failing test before touching any table. Use the real text from the spr
 | Column mapped to the wrong field, or not mapped | `src/lib/extraction/mapColumns.test.ts` |
 | A value in its own column parsed wrongly (RAM, storage, screen, type, CPU, date) | `src/lib/extraction/normalise.test.ts` |
 | A combined cell split wrongly | `src/lib/extraction/parseFreeText.test.ts` |
+| A row skipped, kept or set aside wrongly (heading, total, accessory) | `src/lib/extraction/extractAssets.test.ts` |
 | A whole file comes out wrong | add the file to `public/samples/` and a case to `src/lib/extraction/pipeline.test.ts` |
 
 Run `pnpm test` and confirm the new test fails for the reason you expect.
@@ -32,6 +33,12 @@ Run `pnpm test` and confirm the new test fails for the reason you expect.
 | Non-computer word ("docking station") | `src/lib/extraction/vocab.ts`, `NON_COMPUTER_WORDS` |
 | CPU family pattern | `src/lib/extraction/vocab.ts`, `CPU_RULES` |
 | Unit or number format | `src/lib/extraction/normalise.ts` |
+| A header word that changes the meaning ("HDD Type" is not a size) | `src/lib/extraction/fields.ts`, `notWith` of that field |
+| A word that starts a remark in a description ("with", "no", "+") | `src/lib/extraction/parseFreeText.ts`, `TRAILING_NOTE` |
+
+A new brand or product line in `vocab.ts` is picked up by the AI masking on its own. A new unit,
+drive word or CPU family word must also be added to `SPEC_WORDS` in `src/lib/llm/suggestions.ts`,
+or the optional AI request will send it as a shape.
 
 Add only the entry the test needs. Do not add speculative synonyms: a wrong synonym maps a column
 to the wrong field with high confidence, which is worse than leaving it unmapped.

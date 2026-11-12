@@ -21,7 +21,16 @@ pnpm lint
 pnpm test
 ```
 
-Run `pnpm build` as well when the change touches `src/app`, `next.config.ts` or dependencies.
+When the change touches `src/app`, `src/components`, `src/lib/llm`, `e2e`, `next.config.ts` or
+dependencies, also run the browser tests. They build the app first, so they cover `pnpm build`:
+
+```bash
+pnpm e2e
+```
+
+`pnpm e2e` needs Google Chrome and a free local port (3100). It cannot run in a sandbox that
+forbids local ports. If you cannot run it, say so; do not report the UI as verified.
+`.local-map/scripts/check.sh --all` runs all four checks and saves the output as evidence.
 
 ## Acceptance numbers that must still hold
 
@@ -33,8 +42,11 @@ These come from `docs/spec.md` and are asserted in `src/lib/extraction/pipeline.
 
 ## UI changes
 
-Tests do not cover the screens. For a UI change, open the app in the browser, load a sample file,
-and look at the mapping panel, the results table and one error state. Say what you looked at.
+`e2e/app.spec.ts` covers the main paths: the samples, remapping, editing, the downloads, failure
+messages. It does not cover focus after an edit, the AI button, narrow screens or other browsers.
+For a UI change, also open the app in the browser, load a sample file, and look at the mapping
+panel, the results table and one error state. Say what you looked at. A new visible behaviour
+gets a test in `e2e/app.spec.ts`.
 
 ## Reporting
 

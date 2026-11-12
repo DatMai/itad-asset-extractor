@@ -8,6 +8,7 @@
   - `handoff`: end of a session, or before passing work to another agent.
 - **Subagents** (`.claude/agents/`):
   - `extraction-engineer`: owns `src/lib/extraction` and its tests.
-  - `ui-engineer`: owns `src/app` and `src/components`.
+  - `ui-engineer`: owns `src/app` (the API route included), `src/components`, `src/lib/llm` and
+    `e2e`.
   - `reviewer`: read-only review against `docs/spec.md`, the way the client's engineer would.
 - Run the dev server through the Browser pane (`.claude/launch.json`), not through Bash.

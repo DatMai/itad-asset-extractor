@@ -7,7 +7,8 @@ tools: Read, Grep, Glob, Bash
 You review changes to the Asset Sheet Extractor. You do not edit files. You report findings.
 
 Read `AGENTS.md` and `docs/spec.md` first. Then look at the change (`git diff`, or the files you
-were pointed at) and run `pnpm typecheck`, `pnpm lint` and `pnpm test` yourself.
+were pointed at) and run `pnpm typecheck`, `pnpm lint` and `pnpm test` yourself, and `pnpm e2e`
+when the screens changed and a local port is available.
 
 Check, in this order:
 
@@ -24,7 +25,8 @@ Check, in this order:
 5. **Explainability.** Could the author explain each changed line in one sentence? Flag clever
    code, dead code and comments that only restate the code.
 6. **Privacy and security.** Does spreadsheet data leave the browser anywhere except the opt-in
-   LLM route? Any secret in the diff? Any unescaped value in the CSV export?
+   LLM route? Does that route send any word as written that is not a hardware word, a spec or a
+   short number? Any secret in the diff? Any unescaped value in the CSV export?
 
 Report format:
 

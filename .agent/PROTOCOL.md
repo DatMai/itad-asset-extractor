@@ -10,8 +10,7 @@ One writer per area at a time. A reviewer never edits.
 | Role | Owns (may edit) | Must not edit |
 | --- | --- | --- |
 | Extraction engineer | `src/lib/extraction/**`, `scripts/make-fixtures.mjs`, `public/samples/**` | `src/app/**`, `src/components/**` |
-| UI engineer | `src/app/**`, `src/components/**` | `src/lib/extraction/**` (ask for an API change instead) |
-| LLM engineer | `src/lib/llm/**`, `src/app/api/**` | the extraction pipeline |
+| UI engineer | `src/app/**` (the API route included), `src/components/**`, `src/lib/llm/**`, `e2e/**` | `src/lib/extraction/**` (ask for an API change instead) |
 | Reviewer | nothing; reports findings | everything |
 | Anyone | `.local-map/**`, `.agent/HANDOFF.md`, `docs/**`, `README.md` | |
 
@@ -24,11 +23,12 @@ is a cross-area change: note it in `HANDOFF.md` before you do it.
 2. **Claim.** Add your task under "In progress" in `HANDOFF.md` with your role and the files you
    will touch. If someone already claimed those files, pick something else.
 3. **Work test-first.** Failing test, smallest change that passes, refactor.
-4. **Verify.** `pnpm typecheck && pnpm lint && pnpm test`. Read the output; do not assume.
+4. **Verify.** `pnpm typecheck && pnpm lint && pnpm test`, and `pnpm e2e` for a change to the
+   screens. Read the output; do not assume.
 5. **Record.** Add a `.local-map/JOURNEY.md` entry. Update `.local-map/MAP.md` if files moved or
    were added. Add a `.local-map/DECISIONS.md` entry if you chose between real alternatives.
-6. **Hand off.** Move your task to "Done" in `HANDOFF.md`, list what the next agent should know,
-   and commit.
+6. **Hand off.** Remove your task from "In progress", add an entry to the "Log" in `HANDOFF.md`
+   that lists what the next agent should know, and commit.
 
 ## Handoff entry format
 

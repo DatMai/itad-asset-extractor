@@ -21,7 +21,7 @@ optional:       POST /api/suggest-mapping  →  Claude, for columns the rules le
 
 Everything under `src/lib/extraction` is pure functions on plain data: the same code runs in the
 browser and in Vitest. The UI keeps state (sheets, chosen header rows, mappings, manual edits) and
-re-runs `extractAssets` whenever a mapping changes.
+re-runs `extractAll` whenever a mapping changes.
 
 ## Steps
 
@@ -41,6 +41,7 @@ Each step is test-first and ends with `pnpm typecheck && pnpm lint && pnpm test`
 | 10 | LLM suggestion | Opt-in route; heuristics stand when it fails; prompt in `src/lib/llm/prompt.ts` |
 | 11 | README and demo script | AC10, AC11 |
 | 12 | Review as the client would | `reviewer` checklist in `.claude/agents/reviewer.md`; fix findings |
+| 13 | Browser tests (added 12 Nov) | AC13: `pnpm e2e` drives the built app in Chrome |
 
 ## Order of cuts if time runs out
 
@@ -49,5 +50,12 @@ in step 7. Steps 1–6 and the mapping panel are the product.
 
 ## Not planned
 
-Persistence, accounts, dashboard, server-side parsing, Playwright, per-cell LLM parsing, several
-tables in one sheet, transposed tables. See "Known limitations" in the README.
+Persistence, accounts, dashboard, server-side parsing, per-cell LLM parsing, several tables in one
+sheet, transposed tables. See "Known limitations" in the README.
+
+## After the plan
+
+Playwright was on the "not planned" list. It was added on 12 Nov 2026, after a second review
+found bugs between the pipeline and the screen (decision D19). `pnpm e2e` runs it. The same
+review led to three rounds of fixes; they are recorded in `.local-map/JOURNEY.md` and
+`.local-map/REVIEW.md`, not as steps here.

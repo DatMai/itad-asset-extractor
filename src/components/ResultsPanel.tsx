@@ -75,7 +75,7 @@ export function ResultsPanel({ fileName, assets, skipped, onEdit, onKind }: Prop
       {tab === "skipped" ? (
         <SkippedTable rows={skipped} />
       ) : shown.length === 0 ? (
-        <EmptyState tab={tab} onlyToCheck={onlyToCheck} />
+        <EmptyState tab={tab} onlyToCheck={onlyToCheck} computersCount={computers.length} othersCount={others.length} />
       ) : (
         <AssetTable assets={shown} tab={tab} onEdit={onEdit} onKind={onKind} />
       )}
@@ -150,7 +150,7 @@ function AssetTable({ assets, tab, onEdit, onKind }: { assets: Asset[]; tab: Tab
           <button type="button" onClick={() => setShowAll(true)} className="text-sky-700 underline hover:text-sky-900">
             Show all
           </button>{" "}
-          (the downloads always contain every row)
+          (the downloads always contain every computer row)
         </p>
       )}
     </>
@@ -186,8 +186,18 @@ function SkippedTable({ rows }: { rows: SkippedRow[] }) {
   );
 }
 
-function EmptyState({ tab, onlyToCheck }: { tab: Tab; onlyToCheck: boolean }) {
+function EmptyState({ tab, onlyToCheck, computersCount, othersCount }: { tab: Tab; onlyToCheck: boolean; computersCount: number; othersCount: number }) {
   if (tab === "others") return <p className="mt-4 text-sm text-slate-600">Nothing was set aside as a non-computer.</p>;
+  // A list of monitors and docks was read correctly; it just holds no computers. Saying "no
+  // assets, check the header row" would send the user to fix something that is not broken.
+  if (computersCount === 0 && othersCount > 0) {
+    return (
+      <p className="mt-4 text-sm text-slate-600">
+        No computers in this file. {othersCount} {othersCount === 1 ? "row was" : "rows were"} set aside as
+        non-computers: see the “Not computers” tab. The downloads contain computers only.
+      </p>
+    );
+  }
   if (onlyToCheck) return <p className="mt-4 text-sm text-slate-600">Nothing to check: every value was read with confidence.</p>;
   return (
     <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">

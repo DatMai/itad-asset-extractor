@@ -4,7 +4,7 @@ import { useState } from "react";
 import { LIMITS } from "@/lib/extraction/limits";
 
 /** Files shipped with the app, so the extractor can be tried without a spreadsheet at hand. */
-export const SAMPLES = [
+const SAMPLES = [
   { file: "sample_assets_1.xlsx", label: "Client sample 1", detail: "xlsx · header on row 4 · two sheets" },
   { file: "sample_assets_2.csv", label: "Client sample 2", detail: "csv · everything in one description column" },
   { file: "vn_headers_row7.xlsx", label: "Vietnamese headers", detail: "xlsx · header on row 7 · date cells · hidden sheet" },
@@ -38,14 +38,16 @@ export function UploadPanel({ busy, problem, onFile, onSample }: Props) {
       <label
         onDragOver={(event) => {
           event.preventDefault(); // without this the browser opens the file instead
-          setIsDragging(true);
+          if (!busy) setIsDragging(true); // while a file is being read the zone does not invite another
         }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={(event) => {
           event.preventDefault();
           setIsDragging(false);
           const file = event.dataTransfer.files[0];
-          if (file) onFile(file);
+          // The file input and the sample buttons are disabled while reading; a drop must wait too,
+          // or two files are read at once and the slower one wins the screen.
+          if (file && !busy) onFile(file);
         }}
         className={`mt-4 flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed px-6 py-10 text-center transition focus-within:ring-2 focus-within:ring-sky-500 ${
           isDragging ? "border-sky-500 bg-sky-50" : "border-slate-300 hover:border-slate-400 hover:bg-slate-50"

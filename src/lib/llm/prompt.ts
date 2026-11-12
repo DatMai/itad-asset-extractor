@@ -3,6 +3,7 @@
  *
  * The model is asked one narrow question: for the columns our rules could not identify, which
  * field does each hold? It never sees a whole spreadsheet and never produces asset data.
+ * It must be told how values are masked (see maskSample in suggestions.ts), or the shapes mean nothing to it.
  */
 import type { SuggestRequest } from "./schema";
 
@@ -11,7 +12,7 @@ export const SYSTEM_PROMPT = `You help read IT asset spreadsheets (laptops, desk
 A rule-based program has already identified most columns. You are given every column of one sheet as JSON:
 - "header": the column name as written in the file ("Column C" means the file has no header row).
 - "mappedTo": the field the program already assigned, or null when it could not decide.
-- "samples": up to five values from the column, only for undecided columns. Identifiers are masked to their shape: A stands for a letter, 9 for a digit.
+- "samples": up to five values from the column, only for undecided columns. For privacy, only hardware details (such as "16GB" or "Latitude 5420") are given as written. Every other value is reduced to its shape: A stands for a capital letter, a for a small letter, 9 for a digit, and punctuation is kept. So "Aaaaa Aaa" is probably a person's name, "aaaa.aaa@aaaa.aaa" an email address and "9AAA9A9" a serial number or tag. A column name can be masked in the same way.
 
 For each column whose "mappedTo" is null, say which field it holds. The fields are:
 - assetType: the kind of device (laptop, desktop, server, workstation, tablet, NAS).

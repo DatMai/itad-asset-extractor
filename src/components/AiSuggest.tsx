@@ -32,7 +32,12 @@ export function AiSuggest({ unclear, status, onAsk }: Props) {
           </button>
           <p className="max-w-3xl text-slate-600">
             Sends the names of this sheet’s columns and up to five sample values from the {columns} to Anthropic’s
-            API. Serial numbers and tags are masked. Nothing else leaves your browser.
+            API. In a sample value, a word is sent as written only if it is a hardware word (a brand, product line,
+            device type, processor family, unit or drive word, such as “Dell”, “Latitude” or “SSD”), a specification
+            or a date (such as “16GB” or “i7-1185G7”), or a number of at most four characters (such as the “5420” of
+            a model). Every other word, including names, emails, phone numbers, serial numbers and tags, is sent as
+            its shape only: each letter becomes A or a, each digit 9. A name that is also a hardware word (such as
+            “Swift”, an Acer laptop) is sent as written. Nothing else leaves your browser.
           </p>
         </div>
       )}

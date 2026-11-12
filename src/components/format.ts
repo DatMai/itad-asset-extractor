@@ -11,7 +11,7 @@ export function formatValue(key: FieldKey, value: string | number): string {
 }
 
 /** Doubt is shown as a named level first; the number is secondary. */
-export type Level = "high" | "medium" | "check";
+type Level = "high" | "medium" | "check";
 
 export function levelOf(confidence: number): Level {
   if (confidence < LOW_CONFIDENCE) return "check";

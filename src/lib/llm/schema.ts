@@ -7,7 +7,7 @@ import { z } from "zod";
 import { FIELD_KEYS } from "@/lib/extraction/types";
 
 /** What the model may answer for a column. "unmapped" lets it say "I cannot tell". */
-export const AI_TARGETS = [...FIELD_KEYS, "combined", "unmapped"] as const;
+const AI_TARGETS = [...FIELD_KEYS, "combined", "unmapped"] as const;
 
 /** Browser -> route. The limits keep one request small and cheap, whoever sends it. */
 export const SuggestRequestSchema = z.object({
@@ -16,8 +16,12 @@ export const SuggestRequestSchema = z.object({
       z.object({
         index: z.number().int().min(0).max(1000),
         header: z.string().max(120),
-        /** What our rules decided for this column; null for the columns we are asking about. */
-        mappedTo: z.string().max(40).nullable(),
+        /**
+         * What our rules decided for this column; null for the columns we are asking about.
+         * A fixed list, not free text: the route is open, and free text here would let a caller
+         * pass the model anything.
+         */
+        mappedTo: z.enum([...FIELD_KEYS, "combined", "ignore"]).nullable(),
         /** Up to five values, only for the columns we are asking about. */
         samples: z.array(z.string().max(80)).max(5),
       }),
@@ -27,7 +31,11 @@ export const SuggestRequestSchema = z.object({
 });
 export type SuggestRequest = z.infer<typeof SuggestRequestSchema>;
 
-/** Claude -> route -> browser. */
+/**
+ * Claude -> route -> browser. No length limits here on purpose: the model's structured output
+ * does not enforce them, so a long reason would turn a good answer into an error. The route
+ * trims the answer after parsing instead (see trimAnswer in route.ts).
+ */
 export const SuggestionsSchema = z.object({
   suggestions: z.array(
     z.object({
@@ -38,4 +46,3 @@ export const SuggestionsSchema = z.object({
     }),
   ),
 });
-export type Suggestions = z.infer<typeof SuggestionsSchema>;

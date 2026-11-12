@@ -124,7 +124,7 @@ file of their own; they are tested through the files that use them.
 | `.agent/` | Tool-neutral agent protocol (`PROTOCOL.md`) and live state (`HANDOFF.md`) |
 | `.claude/` | Claude Code skills, subagent definitions, and `launch.json` for the dev server |
 | `.local-map/` | This map; see its `README.md` |
-| `docs/` | `spec.md` (requirements), `research.md`, `plan.md` |
+| `docs/` | `research.md`; `superpowers/specs/` (the spec: requirements and acceptance criteria); `superpowers/plans/` (the implementation plan) |
 | `public/samples/` | The client's two samples and the four generated fixtures; used by tests and by the sample buttons |
 | `scripts/make-fixtures.mjs` | Generates the four fixtures (`pnpm fixtures`) |
 | `next.config.ts` | The security headers sent with every response and `poweredByHeader: false`; then the scaffold defaults: `cacheComponents` (the page is prerendered as a static shell), `partialPrefetching` (link prefetching; irrelevant with one route), and the Turbopack rule that runs Tailwind 4 on CSS |

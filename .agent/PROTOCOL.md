@@ -43,7 +43,7 @@ is a cross-area change: note it in `HANDOFF.md` before you do it.
 
 ## Stop and ask the human when
 
-- A change would break a rule in `AGENTS.md` or an acceptance criterion in `docs/spec.md`.
+- A change would break a rule in `AGENTS.md` or an acceptance criterion in `docs/superpowers/specs/2026-11-11-asset-sheet-extractor-design.md`.
 - A new dependency, a new network call, or anything that sends spreadsheet data off the device.
 - Two reasonable readings of the spec lead to different behaviour.
 - Tests fail for a reason you cannot explain after one honest attempt.

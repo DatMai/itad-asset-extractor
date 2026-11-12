@@ -17,7 +17,7 @@ Any agent (Claude Code, Codex, Copilot, Cursor) starts here. Humans can read it 
 1. This file: rules and commands.
 2. `.local-map/README.md`, then `.local-map/MAP.md`: where everything is and how we got here.
 3. `.agent/HANDOFF.md`: what is done, what is next, what is broken.
-4. `docs/spec.md`: the requirements and acceptance criteria. It wins over everything else.
+4. `docs/superpowers/specs/2026-11-11-asset-sheet-extractor-design.md`: the requirements and acceptance criteria. It wins over everything else.
 
 ## What this project is
 
@@ -73,4 +73,4 @@ thin layer on top of it.
 
 Roles, file ownership and the handoff format are in `.agent/PROTOCOL.md`. In short: one writer per
 area at a time, claim work in `.agent/HANDOFF.md` before starting, and stop to ask the human when
-a change would break a rule above or an acceptance criterion in `docs/spec.md`.
+a change would break a rule above or an acceptance criterion in the spec.

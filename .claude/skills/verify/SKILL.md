@@ -34,7 +34,7 @@ forbids local ports. If you cannot run it, say so; do not report the UI as verif
 
 ## Acceptance numbers that must still hold
 
-These come from `docs/spec.md` and are asserted in `src/lib/extraction/pipeline.test.ts`:
+These come from `docs/superpowers/specs/2026-11-11-asset-sheet-extractor-design.md` and are asserted in `src/lib/extraction/pipeline.test.ts`:
 
 - `sample_assets_1.xlsx`: header on row 4 of `Assets` and row 3 of `Sheet1 (2)`; 15 + 4 = 19 assets;
   the `TOTAL` row is skipped.

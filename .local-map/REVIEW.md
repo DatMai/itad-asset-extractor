@@ -62,7 +62,7 @@ Fixes are in commit `fd82557`.
 Done by the author before the repository was made public and the link was sent (12 Nov 2026).
 I read all of the code and the documents, and I can explain every part of it.
 
-- [x] `docs/spec.md`: the acceptance criteria say what I want.
+- [x] The spec (`docs/superpowers/specs/2026-11-11-asset-sheet-extractor-design.md`): the acceptance criteria say what I want.
 - [x] `src/lib/extraction/pipeline.test.ts`: the expected values are what I expect by hand.
 - [x] `detectHeader.ts`, `mapColumns.ts`: I can explain the scoring in my own words.
 - [x] `parseFreeText.ts`: walked descriptions through it by hand.

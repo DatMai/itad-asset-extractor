@@ -1,6 +1,6 @@
 /**
  * The whole pipeline on real files: the client's two samples and the self-made fixtures.
- * These tests are the acceptance criteria of docs/spec.md (AC1–AC4, AC7) in executable form.
+ * These tests are the acceptance criteria of the spec (docs/superpowers/specs) (AC1–AC4, AC7) in executable form.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";

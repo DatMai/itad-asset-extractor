@@ -2,7 +2,7 @@
 
 Each entry: the situation, the options, the choice, and what the choice costs. A reversal is a new
 entry that names the one it replaces. The short version of these is the trade-off table in
-`docs/spec.md` section 4.
+`docs/superpowers/specs/2026-11-11-asset-sheet-extractor-design.md` section 4.
 
 ## D1 Parse the spreadsheet in the browser
 
@@ -268,3 +268,16 @@ entry that names the one it replaces. The short version of these is the trade-of
 - **Cost.** Where arrow keys change a closed dropdown at once, the first arrow press saves and
   closes. Escape does not cancel inside the dropdown. Not checked by hand in a browser; the
   browser tests cover a text edit with Enter and Escape, not the dropdown and not the focus.
+
+## D26 The spec and the plan use the Superpowers layout
+
+- **Situation.** The project was meant to follow the Superpowers workflow, but its spec and plan
+  were `docs/spec.md` and `docs/plan.md`, and the plan was a short table of steps.
+- **Options.** (a) Leave them. (b) Move both to `docs/superpowers/` and rewrite the plan in the
+  format of the `writing-plans` skill.
+- **Choice.** (b), on 12 Nov 2026, after the work was done.
+- **Why.** A reader who knows the workflow finds things where they expect them, and the task
+  format ties each step to its files, its tests and its commit.
+- **Cost.** The plan is a record written after the fact, not the document the work was run from.
+  It says so at the top and lists what differed from the workflow at the end. Old links to
+  `docs/spec.md` and `docs/plan.md` from outside the repository no longer resolve.

@@ -277,3 +277,18 @@ Append-only log. Newest at the bottom. Times are Vietnam time (GMT+7).
 - `REVIEW.md` section 2 and the README now state the author's own review: all of the code and
   documents were read before the repository was made public. Earlier entries of today said the
   checklist was open; that was the agent's wrong assumption and they were corrected.
+
+### Spec and plan moved to the Superpowers layout
+
+- `docs/spec.md` is now `docs/superpowers/specs/2026-11-11-asset-sheet-extractor-design.md`; its text is unchanged apart from a
+  note about the move. `docs/plan.md` is now `docs/superpowers/plans/2026-11-11-asset-sheet-extractor.md`,
+  rewritten in the Superpowers plan format: header, global constraints, review focus, and twelve
+  tasks with files, interfaces, test-first steps and the commit that delivered each one.
+- The plan was checked against `git log`: which commit created which file. Two things the first
+  draft of the rewrite had wrong were corrected: the fixture generator came with the workbook
+  reader, and the screens had no unit tests until the second review.
+- The plan ends with a table of what was not done the Superpowers way (no brainstorming session,
+  no worktree, one session for tasks 1 to 10, screens before their tests). See D26.
+- Earlier entries in this file still name `docs/spec.md` and `docs/plan.md`; they describe the
+  repository as it was then.
+- No code changed. Checks: see `evidence/checks/latest.txt`.

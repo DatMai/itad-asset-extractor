@@ -18,8 +18,8 @@ cold, human or agent, should be able to find their way from this folder alone.
 | [`research/`](research/) | Raw research notes and the full report | Check a source behind `docs/research.md` |
 | [`../.agent/HANDOFF.md`](../.agent/HANDOFF.md) | You are here: current state and next step | Pick up the work |
 
-Related: [`../docs/spec.md`](../docs/spec.md) (requirements; wins over everything),
-[`../docs/research.md`](../docs/research.md), [`../docs/plan.md`](../docs/plan.md),
+Related: [the spec](../docs/superpowers/specs/2026-11-11-asset-sheet-extractor-design.md) (requirements; wins over everything),
+[`../docs/research.md`](../docs/research.md), [the plan](../docs/superpowers/plans/2026-11-11-asset-sheet-extractor.md),
 [`../AGENTS.md`](../AGENTS.md), [`../.agent/PROTOCOL.md`](../.agent/PROTOCOL.md).
 
 ## Scripts
@@ -50,7 +50,7 @@ now, for example the text beside "Ask AI".
 
 | Path | What it proves |
 | --- | --- |
-| `evidence/sample-dumps/*.txt` | The row numbers, counts and cell values quoted in `docs/spec.md`, straight from the client's sample files. |
+| `evidence/sample-dumps/*.txt` | The row numbers, counts and cell values quoted in the spec, straight from the client's sample files. |
 | `evidence/checks/latest.txt` | The last recorded run of the checks, with date, commit and Node version. The commit in it is the one the run was made on; saving the file creates a newer commit, so it is never `HEAD` itself. It contains a build and the browser tests only when the run was made with `--all`. |
 
 ## Conventions
@@ -61,7 +61,7 @@ now, for example the text beside "Ask AI".
   gives the ones that changed.
 - **Every claim has evidence.** A test name, a command and its result, a commit hash, a file in
   `evidence/`, a screenshot, or a link. "Should work" is not evidence.
-- **`MAP.md` describes the code as it is**, not as planned. Plans live in `docs/plan.md`.
+- **`MAP.md` describes the code as it is**, not as planned. Plans live in `docs/superpowers/plans/`.
 - **`DECISIONS.md` records choices between real alternatives** and what each choice costs.
   A reversal is a new entry that names the one it replaces.
 - **A script used twice belongs in `scripts/`**, with a usage line at the top.

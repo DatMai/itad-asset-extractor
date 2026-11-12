@@ -223,8 +223,25 @@ sources is in [`docs/research.md`](docs/research.md).
 
 **To build it.** The repository was written with Claude Code (Anthropic), working as an agent
 under a written brief. I wrote the brief and its acceptance criteria; the agent tightened it into
-[`docs/spec.md`](docs/spec.md), researched the open questions with sources, planned, and then
+[the spec](docs/superpowers/specs/2026-11-11-asset-sheet-extractor-design.md), researched the open questions with sources, planned, and then
 wrote tests before code for each stage of the pipeline.
+
+**The process.** The work follows the order of the
+[Superpowers](https://github.com/obra/superpowers) workflow for coding agents, and since 12 Nov
+the documents use its layout:
+
+| Superpowers step | In this repository |
+| --- | --- |
+| Design before code | [the spec](docs/superpowers/specs/2026-11-11-asset-sheet-extractor-design.md), with research in [`docs/research.md`](docs/research.md) |
+| Plan in small test-first tasks | [the plan](docs/superpowers/plans/2026-11-11-asset-sheet-extractor.md), each task tied to its commit |
+| Test first | 507 unit tests next to the code; the acceptance criteria are tests on the real files |
+| Review before merge | two reviews, recorded in [`.local-map/REVIEW.md`](.local-map/REVIEW.md) |
+| Evidence before "done" | `.local-map/scripts/check.sh`, output kept in `.local-map/evidence/checks/` |
+
+It is not a textbook run of that workflow. The spec started from my own brief, not from a
+question-by-question design session; the plan was first a short table and was rewritten in the
+Superpowers format after the work; there was one branch and no worktree; the screens were built
+before their tests. The plan lists these differences at its end.
 
 What kept the agent's work checkable:
 
@@ -307,7 +324,8 @@ src/app/              page, layout, and the one API route
 e2e/                  browser tests (Playwright) against the built app
 public/samples/       the client's two samples and four generated fixtures
 scripts/              fixture generator
-docs/                 spec, research summary, plan
+docs/                 research summary
+docs/superpowers/     specs/ (the spec) and plans/ (the implementation plan), Superpowers layout
 .local-map/           map of the project: journey, decisions, review, screenshots, evidence
 .agent/, .claude/     how coding agents share the work: protocol, handoff, skills, subagents
 AGENTS.md             rules and commands for any coding agent

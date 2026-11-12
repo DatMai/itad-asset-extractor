@@ -1,5 +1,5 @@
-date:   2026-11-12 10:25 +07
-commit: e36503b 
+date:   2026-11-12 14:46 +07
+commit: e4840ca (with uncommitted changes)
 node:   v26.0.0   pnpm: 11.10.0
 
 ===== pnpm typecheck =====
@@ -17,8 +17,8 @@ Generating route types...
 
  Test Files  15 passed (15)
       Tests  507 passed (507)
-   Start at  10:26:03
-   Duration  1.03s (tests 50%, import 44%, transform 5%, worker 2%)
+   Start at  14:46:50
+   Duration  1.07s (import 46%, tests 43%, transform 11%, worker 1%)
 
 ----- test: PASS
 
@@ -27,14 +27,14 @@ Generating route types...
 
 Running 8 tests using 5 workers
 
-  ✓  2 e2e/app.spec.ts:40:1 › client sample 2: one description column becomes fields; non-computers are set aside (1.5s)
-  ✓  4 e2e/app.spec.ts:21:1 › client sample 1: header on row 4, two sheets, 19 assets, the TOTAL row explained (1.6s)
-  ✓  3 e2e/app.spec.ts:52:1 › a layout it has never seen: title lines, unusual header names, a subtotal row (1.6s)
-  ✓  1 e2e/app.spec.ts:69:1 › the user can correct how the file was read (1.8s)
-  ✓  5 e2e/app.spec.ts:98:1 › editing a cell, moving a row, and exporting CSV and JSON (1.9s)
-  ✓  7 e2e/app.spec.ts:161:1 › the spreadsheet never leaves the browser (895ms)
-  ✓  6 e2e/app.spec.ts:137:1 › files that cannot be read get a specific message, and the app recovers (1.1s)
-  ✓  8 e2e/app.spec.ts:181:1 › the six bundled samples all open without an error (1.1s)
+  ✓  2 e2e/app.spec.ts:21:1 › client sample 1: header on row 4, two sheets, 19 assets, the TOTAL row explained (1.6s)
+  ✓  1 e2e/app.spec.ts:40:1 › client sample 2: one description column becomes fields; non-computers are set aside (1.6s)
+  ✓  4 e2e/app.spec.ts:69:1 › the user can correct how the file was read (1.7s)
+  ✓  3 e2e/app.spec.ts:98:1 › editing a cell, moving a row, and exporting CSV and JSON (1.8s)
+  ✓  7 e2e/app.spec.ts:161:1 › the spreadsheet never leaves the browser (685ms)
+  ✓  5 e2e/app.spec.ts:52:1 › a layout it has never seen: title lines, unusual header names, a subtotal row (2.5s)
+  ✓  6 e2e/app.spec.ts:137:1 › files that cannot be read get a specific message, and the app recovers (905ms)
+  ✓  8 e2e/app.spec.ts:181:1 › the six bundled samples all open without an error (957ms)
 
-  8 passed (9.4s)
+  8 passed (10.9s)
 ----- e2e: PASS

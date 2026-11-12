@@ -7,6 +7,10 @@ Section 9 lists what was missing or contradictory in the first draft and how it 
 
 Status: accepted. Changes go through `.local-map/DECISIONS.md`.
 
+This file is the design document in the Superpowers layout (`docs/superpowers/specs/`). It was
+`docs/spec.md` until 12 Nov 2026; only its place changed. The plan that implements it is
+[`../plans/2026-11-11-asset-sheet-extractor.md`](../plans/2026-11-11-asset-sheet-extractor.md).
+
 ## 1. Goal
 
 Build a web app (TypeScript, Next.js App Router, React) where a user can:

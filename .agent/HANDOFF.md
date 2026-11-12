@@ -6,8 +6,7 @@ The state of the work, for whoever picks it up next. Format and rules: `.agent/P
 
 - **Branch:** `main` and `feat/asset-extraction` point at the same commit and are pushed to
   `origin` (https://github.com/DatMai/itad-asset-extractor, public). The work of 12 Nov after the
-  release (second review, three fix rounds, browser tests, documents) is in the working tree and
-  is not committed or pushed yet.
+  release (second review, three fix rounds, browser tests, documents) is committed and pushed.
 - **Works, with proof:**
   - 507 unit tests in 15 files (`pnpm test`), `pnpm typecheck` and `pnpm lint`. The
     last recorded run is `.local-map/evidence/checks/latest.txt`; check its date and commit

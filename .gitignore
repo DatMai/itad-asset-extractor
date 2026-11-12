@@ -51,3 +51,7 @@ next-env.d.ts
 # working folders of the research step; the kept copies are in .local-map/research
 /research_notes/
 /reports/
+
+# playwright
+/test-results/
+/playwright-report/

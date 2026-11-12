@@ -160,9 +160,14 @@ interface CpuRule {
   name: (match: RegExpExecArray) => string;
   /** Which group holds the model number. A CPU without one ("i7") is only a partial answer. */
   modelGroup: number;
+  /** Why this match may not be a CPU at all, or undefined when the text settles it. */
+  doubt?: (match: RegExpExecArray, text: string) => string | undefined;
 }
 
 const tidy = (text: string | undefined) => (text ?? "").replace(/\s+/g, " ").trim();
+
+/** Words that show the text is about an Apple machine, so "M2" in it is the chip. */
+const APPLE_CONTEXT = /\b(?:Apple|iMac|Mac|MacBook\w*|MBP|MBA)\b/i;
 
 const CPU_RULES: CpuRule[] = [
   {
@@ -189,6 +194,13 @@ const CPU_RULES: CpuRule[] = [
     modelGroup: 2,
   },
   {
+    // "2x E5-2680 v4": server lists drop the word Xeon. E3, E5 and E7 with four digits are
+    // Xeon families and nothing else.
+    pattern: new RegExp(String.raw`${COUNT}\b(E[357]-\d{4}[A-Z]?)(?:\s?(v\d))?\b`, "i"),
+    name: (m) => tidy(`Intel Xeon ${m[2].toUpperCase()} ${m[3]?.toLowerCase() ?? ""}`),
+    modelGroup: 2,
+  },
+  {
     pattern: new RegExp(
       String.raw`${COUNT}(?:AMD\s+)?Ryzen\b((?:\s+(?:Threadripper|AI|[3579]))?(?:\s+PRO)?(?:\s+([A-Z]?\d{3,4}${NOT_A_SIZE}[A-Z0-9]{0,4}))?)`,
       "i",
@@ -202,10 +214,27 @@ const CPU_RULES: CpuRule[] = [
     modelGroup: 2,
   },
   {
-    // "M2 SSD" and "M.2" are drive formats, not Apple chips.
-    pattern: new RegExp(String.raw`${COUNT}(?:Apple\s+)?\b(M[1-5])\b(?!\s*(?:SSD|NVMe|SATA))(?:\s+(Pro|Max|Ultra)\b)?`, "i"),
-    name: (m) => tidy(`Apple ${m[2].toUpperCase()} ${m[3] ? m[3][0].toUpperCase() + m[3].slice(1).toLowerCase() : ""}`),
-    modelGroup: 2,
+    // Intel Core m3-7Y30, m5-6Y54, m3-8100Y. Listed before the Apple rule, which would otherwise
+    // take the "m3" for an Apple M3.
+    pattern: new RegExp(String.raw`${COUNT}(?:Intel\s+)?Core\s+m([357])(?:[\s-]+(\d[A-Z]\d{2}|\d{4}[A-Z])\b)?`, "i"),
+    name: (m) => `Intel Core m${m[2]}${m[3] ? `-${m[3].toUpperCase()}` : ""}`,
+    modelGroup: 3,
+  },
+  {
+    // Apple M1 to M5. Two things look the same and are not Apple chips:
+    //  - the start of another model number ("m3-7Y30"), so no digit may follow;
+    //  - an M.2 drive written "M2" ("M2 SSD", "M2 2280"), so no drive word or drive length may follow.
+    // Groups: 2 = the word Apple, 3 = the chip, 4 = Pro, Max or Ultra.
+    pattern: new RegExp(
+      String.raw`${COUNT}(Apple\s+)?\b(M[1-5])\b(?![-.]?\d)(?!\s*(?:SSD|NVMe|SATA|PCIe|2230|2242|2260|2280|drive|slot))(?:\s+(Pro|Max|Ultra)\b)?`,
+      "i",
+    ),
+    name: (m) => tidy(`Apple ${m[3].toUpperCase()} ${m[4] ? m[4][0].toUpperCase() + m[4].slice(1).toLowerCase() : ""}`),
+    modelGroup: 3,
+    // A bare "M2" is trusted only when something says Apple: the word itself, a suffix that only
+    // Apple chips have, or a Mac named elsewhere in the text.
+    doubt: (m, text) =>
+      m[2] || m[4] || APPLE_CONTEXT.test(text) ? undefined : `Bare "${m[3].toUpperCase()}": an Apple chip or an M.2 drive; check`,
   },
   {
     pattern: new RegExp(String.raw`${COUNT}(?:Intel\s+)?(Celeron|Pentium|Atom)\b((?:\s+(?:Gold|Silver))?(?:\s+[A-Z]?\d{3,5}${NOT_A_SIZE}[A-Z]{0,2})?)`, "i"),
@@ -230,8 +259,13 @@ export interface CpuMatch {
   /** Position and length of the matched text, so a caller can cut it out. */
   index: number;
   length: number;
-  /** False when only the family was written ("i7", "Xeon") and the exact model is unknown. */
+  /**
+   * False when the exact model is not certain: only the family was written ("i7", "Xeon"), or
+   * the match is in doubt (see `doubt`).
+   */
   hasModel: boolean;
+  /** Set when the match may not be a CPU at all, e.g. a bare "M2" on a machine that is not a Mac. */
+  doubt?: string;
 }
 
 /** "11th gen" right after a CPU, or "11th Gen" right before it. */
@@ -247,11 +281,13 @@ export function findCpu(text: string): CpuMatch | null {
     if (!match) continue;
     if (best && best.index <= match.index) continue; // keep the earliest; earlier rules win ties
     const count = match[1] ? `${match[1]}x ` : "";
+    const doubt = rule.doubt?.(match, text);
     best = {
       name: count + rule.name(match),
       index: match.index,
       length: match[0].length,
-      hasModel: tidy(match[rule.modelGroup]) !== "",
+      hasModel: tidy(match[rule.modelGroup]) !== "" && !doubt,
+      ...(doubt && { doubt }),
     };
   }
   if (!best || best.hasModel) return best;

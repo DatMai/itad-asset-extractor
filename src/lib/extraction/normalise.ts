@@ -37,11 +37,26 @@ interface Capacity {
 }
 
 /**
- * An optional count, a number and an optional unit: "2x 1TB", "512 GB", "16G", "32768 MB", "512".
- * The lookbehind keeps us out of model numbers ("X2680G", "DDR4") and decimals ("M.2").
+ * The number part of a capacity, as one capture group. Written once and used both for a column
+ * (CAPACITY below) and for a description (SIZE in parseFreeText.ts), so the two cannot disagree.
+ * Three ways to write it, tried in this order:
+ *   "32,768" / "1,024,000"  thousands groups: commas followed by exactly three digits
+ *   "1,92" / "1,5"          a decimal comma: one or two digits on each side
+ *   "512" / "1.92"          plain digits with an optional decimal point
+ * In a comma list such as "T14,i5,16GB,512GB" none of the comma forms fits, so each number is
+ * read on its own. Read the matched text with parseNumber().
  */
-const CAPACITY =
-  /(?<![a-z0-9.,])(?:(\d+)\s*[x×*]\s*)?(\d+(?:[.,]\d+)?)\s*(terabytes?|gigabytes?|megabytes?|tib|gib|mib|tb|gb|mb|gigs?|megs?|t|g|m)?(?![a-z0-9])/gi;
+export const AMOUNT = String.raw`(\d{1,3}(?:,\d{3})+(?!\d)|\d{1,2},\d{1,2}(?!\d)|\d+(?:\.\d+)?)`;
+
+/**
+ * An optional count, a number and an optional unit: "2x 1TB", "512 GB", "16G", "32768 MB", "512".
+ * The lookbehind keeps us out of model numbers ("X2680G", "DDR4") and decimals ("M.2"). A comma
+ * may come before it: "256GB SSD,1TB HDD" lists two drives.
+ */
+const CAPACITY = new RegExp(
+  String.raw`(?<![a-z0-9.])(?:(\d+)\s*[x×*]\s*)?${AMOUNT}\s*(terabytes?|gigabytes?|megabytes?|tib|gib|mib|tb|gb|mb|gigs?|megs?|t|g|m)?(?![a-z0-9])`,
+  "gi",
+);
 
 export function toUnit(text: string | undefined): CapacityUnit | null {
   if (!text) return null;
@@ -180,10 +195,15 @@ export function tidyCpuText(text: string): string {
 
 export function normaliseCpu(raw: string): Normalised<string> {
   if (isPlaceholder(raw)) return empty();
-  const cpu = findCpu(tidyCpuText(raw));
+  const text = tidyCpuText(raw);
+  const cpu = findCpu(text);
   if (!cpu) return { value: cleanText(raw), confidence: 0.6, note: "Not a CPU family we know; kept as written" };
+  // A bare "M2" among other words may be an M.2 drive. As the whole cell of a CPU column it is
+  // the chip: there is nothing else in the cell it could describe.
+  const isWholeCell = cpu.length === text.length;
+  if (cpu.doubt && !isWholeCell) return { value: cpu.name, confidence: 0.6, note: cpu.doubt };
   // "i5" alone does not identify a processor, so it is shown as "check this".
-  if (!cpu.hasModel) return { value: cpu.name, confidence: 0.6, note: "No model number given" };
+  if (!cpu.hasModel && !cpu.doubt) return { value: cpu.name, confidence: 0.6, note: "No model number given" };
   return { value: cpu.name, confidence: 1 };
 }
 

@@ -116,7 +116,66 @@ describe("readWorkbook: workbooks", () => {
     expect(read.rows).toHaveLength(LIMITS.rows);
     expect(read.truncated).toMatch(/first 5,?000 rows/);
   });
+
+  it("cuts a text file that is longer than the limit and says so", () => {
+    const lines = Array.from({ length: LIMITS.rows + 100 }, (_, i) => `S${i},x`).join("\n");
+    const [read] = readWorkbook(text(lines), "big.csv");
+    expect(read.rows).toHaveLength(LIMITS.rows);
+    expect(read.rows[LIMITS.rows - 1]).toEqual([`S${LIMITS.rows - 1}`, "x"]);
+    expect(read.truncated).toMatch(/first 5,?000 rows/);
+  });
+
+  it("does not say a sheet was cut when it has exactly as many rows as the limit", () => {
+    const rows = Array.from({ length: LIMITS.rows }, (_, i) => [`S${i}`]);
+    const book = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(rows), "Full");
+    const [read] = readWorkbook(toBytes(book), "full.xlsx");
+    expect(read.rows).toHaveLength(LIMITS.rows);
+    expect(read.truncated).toBeUndefined();
+  });
+
+  it("reads every cell even when the sheet declares a smaller size than it has", () => {
+    // Some exporters write a wrong <dimension>. The cells are what counts.
+    const rows = Array.from({ length: 10 }, (_, i) => [`S${i}`, `Model ${i}`, `Note ${i}`]);
+    const book = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(rows), "Stale");
+    const bytes = rewriteZipEntry(toBytes(book), "/xl/worksheets/sheet1.xml", (xml) => {
+      expect(xml).toContain('<dimension ref="A1:C10"/>');
+      return xml.replace('<dimension ref="A1:C10"/>', '<dimension ref="A1:B2"/>');
+    });
+    const [read] = readWorkbook(bytes, "stale.xlsx");
+    expect(read.rows).toHaveLength(10);
+    expect(read.rows[9]).toEqual(["S9", "Model 9", "Note 9"]);
+    expect(read.truncated).toBeUndefined();
+  });
 });
+
+/** Change one file inside an .xlsx (which is a zip) and pack it again. */
+function rewriteZipEntry(bytes: Uint8Array, path: string, change: (content: string) => string): Uint8Array {
+  const zip = XLSX.CFB.read(bytes, { type: "array" });
+  const entry = XLSX.CFB.find(zip, path);
+  if (!entry) throw new Error(`No ${path} in the workbook`);
+  const content = change(new TextDecoder().decode(new Uint8Array(entry.content as ArrayLike<number>)));
+  entry.content = new TextEncoder().encode(content) as never;
+  entry.size = entry.content.length;
+  return new Uint8Array(XLSX.CFB.write(zip, { type: "array", fileType: "zip" }) as ArrayLike<number>);
+}
+
+/**
+ * Make a zip claim that its first file unpacks to `size` bytes, by overwriting the size field of
+ * that file's entry in the central directory (signature PK 01 02, size at offset 24).
+ */
+function declareUnpackedSize(bytes: Uint8Array, size: number): Uint8Array {
+  const copy = bytes.slice();
+  const view = new DataView(copy.buffer);
+  for (let at = 0; at + 28 <= copy.length; at++) {
+    if (view.getUint32(at, true) === 0x02014b50) {
+      view.setUint32(at + 24, size, true);
+      return copy;
+    }
+  }
+  throw new Error("No central directory entry found");
+}
 
 describe("readWorkbook: files it must refuse, each with its own message", () => {
   const failure = (bytes: Uint8Array, name: string) => {
@@ -143,6 +202,17 @@ describe("readWorkbook: files it must refuse, each with its own message", () => 
   it("a file over the size limit", () => {
     const error = failure(new Uint8Array(LIMITS.fileBytes + 1), "huge.csv");
     expect(error.message).toMatch(/larger than 5 MB/);
+    expect(error.hint).not.toBe("");
+  });
+
+  it("a workbook that would unpack to far more than its file size", () => {
+    const book = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet([["Serial"], ["A1B2C3D"]]), "S");
+    const honest = toBytes(book);
+    expect(readWorkbook(honest, "ok.xlsx")[0].rows).toHaveLength(2);
+
+    const error = failure(declareUnpackedSize(honest, LIMITS.unpackedBytes + 1), "bomb.xlsx");
+    expect(error.message).toMatch(/too large once unpacked/);
     expect(error.hint).not.toBe("");
   });
 

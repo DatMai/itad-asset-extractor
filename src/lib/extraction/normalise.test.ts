@@ -24,6 +24,7 @@ describe("normaliseRam (binary: 1024 MB = 1 GB)", () => {
     ["1,024 MB", 1],
     ["16 GB (2 x 8 GB) DDR4", 16],
     ["2x8GB", 16],
+    ["32,768 MB", 32],
   ])("%j -> %d GB", (raw, expected) => {
     const result = normaliseRam(raw);
     expect(result.value).toBe(expected);
@@ -63,6 +64,10 @@ describe("normaliseStorage (decimal: 1 TB = 1000 GB, raw capacity)", () => {
     ["500GB HDD 7200rpm", 500],
     ["512GB SSD (476GB usable)", 512],
     ["1,5 TB", 1500],
+    ["1,92TB", 1920],
+    ["256GB SSD,1TB HDD", 1256],
+    ["256GB SSD, 1TB HDD", 1256],
+    ["1,024,000 MB", 1024],
   ])("%j -> %d GB", (raw, expected) => {
     const result = normaliseStorage(raw);
     expect(result.value).toBe(expected);
@@ -178,6 +183,12 @@ describe("normaliseCpu", () => {
     ["Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz", "Intel Xeon E5-2680 v4"],
     ["Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz", "Intel Xeon Gold 6230"],
     ["Intel Core i7-1185G7 Processor", "Intel Core i7-1185G7"],
+    ["Intel Core m3-7Y30", "Intel Core m3-7Y30"],
+    ["Core m5-6Y54", "Intel Core m5-6Y54"],
+    ["Intel(R) Core(TM) m3-8100Y CPU @ 1.10GHz", "Intel Core m3-8100Y"],
+    ["2x E5-2680 v4", "2x Intel Xeon E5-2680 v4"],
+    ["M1 Pro", "Apple M1 Pro"],
+    ["M2", "Apple M2"], // the whole cell of a CPU column: nothing else it could be
   ])("%j -> %s", (raw, expected) => {
     const result = normaliseCpu(raw);
     expect(result.value).toBe(expected);
@@ -191,6 +202,17 @@ describe("normaliseCpu", () => {
     });
     expect(normaliseCpu("i7")).toMatchObject({ value: "Intel Core i7", confidence: 0.6 });
     expect(normaliseCpu("11th Gen Intel Core i5")).toMatchObject({ value: "Intel Core i5 11th gen", confidence: 0.6 });
+  });
+
+  it("flags a Core m chip that has no model number", () => {
+    expect(normaliseCpu("Core m3")).toMatchObject({ value: "Intel Core m3", confidence: 0.6 });
+  });
+
+  it("flags a bare M chip that sits among other words, where it may be an M.2 drive", () => {
+    const result = normaliseCpu("8GB 256GB M2");
+    expect(result.confidence).toBeLessThan(0.7);
+    expect(result.note).toMatch(/M\.2 drive/);
+    expect(normaliseCpu("M2 2280 NVMe").value).toBe("M2 2280 NVMe"); // not a CPU we know: kept as written
   });
 
   it("keeps an unknown CPU as written, flagged", () => {

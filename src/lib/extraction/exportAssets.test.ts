@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { applyEdits } from "./edits";
 import { ExportedAssetSchema, needsReview, toCsv, toExportRows, toJson } from "./exportAssets";
 import { extractAll, planSheet } from "./pipeline";
 import { readWorkbook } from "./readWorkbook";
@@ -50,12 +51,29 @@ describe("toExportRows (AC8)", () => {
       sourceRow: 9,
       confidence: 1,
       needsReview: false,
+      warnings: null,
+      editedFields: null,
     });
   });
 
   it("carries the lowest confidence of the row and the review flag", () => {
     const partialCpu = rows.find((row) => row.sourceSheet === "Assets" && row.sourceRow === 8);
     expect(partialCpu).toMatchObject({ cpu: "Intel Core i5 11th gen", confidence: 0.6, needsReview: true });
+  });
+
+  it("says why a row needs review: its warnings, joined", () => {
+    const flagged = { ...assetWith({ model: text("Latitude 5420") }), warnings: ["No serial number", "This row stands for 12 devices"] };
+    expect(toExportRows([flagged])[0]).toMatchObject({ needsReview: true, warnings: "No serial number; This row stands for 12 devices" });
+    expect(toExportRows([assetWith({ model: text("Latitude 5420") })])[0].warnings).toBeNull();
+  });
+
+  it("keeps the file's storage text after a manual edit, and names the edited field", () => {
+    const fromFile = assetWith({ model: text("Latitude 5420"), storageGB: { value: 256, raw: "256GB SSD", confidence: 1, source: "column" } });
+    const [edited] = applyEdits([fromFile], { values: { [fromFile.id]: { storageGB: "512", model: "Latitude 5430" } }, kinds: {} });
+    expect(toExportRows([edited])[0]).toMatchObject({ storageGB: 512, storageRaw: "256GB SSD", editedFields: "model storageGB" });
+
+    const [cleared] = applyEdits([fromFile], { values: { [fromFile.id]: { storageGB: "" } }, kinds: {} });
+    expect(toExportRows([cleared])[0]).toMatchObject({ storageGB: null, storageRaw: "256GB SSD", editedFields: "storageGB" });
   });
 
   it("exports null instead of a value of the wrong type", () => {
@@ -82,9 +100,9 @@ describe("toCsv (AC8)", () => {
     const lines = toCsv(toExportRows(assets)).trimEnd().split("\r\n");
     expect(lines).toHaveLength(20);
     expect(lines[0]).toBe(
-      "assetType,manufacturer,model,serialNumber,cpu,ramGB,storageGB,storageRaw,screenInches,assetTag,assignedTo,location,costCentre,purchaseDate,notes,sourceSheet,sourceRow,confidence,needsReview",
+      "assetType,manufacturer,model,serialNumber,cpu,ramGB,storageGB,storageRaw,screenInches,assetTag,assignedTo,location,costCentre,purchaseDate,notes,sourceSheet,sourceRow,confidence,needsReview,warnings,editedFields",
     );
-    expect(lines[5]).toBe("desktop,Dell,OptiPlex 7090,9JZL5N2,Intel Core i7-10700,32,1000,1 TB HDD,,,Reception,Sydney,,,,Assets,9,1,false");
+    expect(lines[5]).toBe("desktop,Dell,OptiPlex 7090,9JZL5N2,Intel Core i7-10700,32,1000,1 TB HDD,,,Reception,Sydney,,,,Assets,9,1,false,,");
   });
 
   it("quotes commas, quotes and line breaks", () => {

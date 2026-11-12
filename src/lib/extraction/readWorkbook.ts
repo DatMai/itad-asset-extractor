@@ -41,16 +41,29 @@ export function readWorkbook(bytes: Uint8Array, fileName: string): RawSheet[] {
     throw new UnreadableFileError("This file is not a spreadsheet.", "Upload an .xlsx, .xls or .csv file.");
   }
 
+  // A small zip can unpack to hundreds of megabytes. Refuse it before the parser inflates it.
+  if (isZip && declaredUnpackedSize(bytes) > LIMITS.unpackedBytes) {
+    throw new UnreadableFileError(
+      "This workbook is too large once unpacked.",
+      "Split it into smaller files, or remove sheets that are not asset lists.",
+    );
+  }
+
+  // One row more than we keep, so that readSheet can tell "exactly at the limit" from "cut".
+  const sheetRows = LIMITS.rows + 1;
   let workbook: XLSX.WorkBook;
   try {
     if (isBinary) {
       // cellNF keeps each cell's number format, which is how we recognise dates.
-      workbook = XLSX.read(bytes, { type: "array", cellNF: true });
+      // sheetRows makes the parser stop building cells after that many rows of a sheet.
+      // nodim: measure the sheet from its cells. The size a file declares for a sheet can be
+      // wrong, and cells outside it would be dropped without a word.
+      workbook = XLSX.read(bytes, { type: "array", cellNF: true, sheetRows, nodim: true });
     } else {
       // raw: keep every cell as the text that was typed. Otherwise "0012" becomes 12 and
       // "12/03/2021" becomes a date read the American way.
       const content = decodeText(bytes);
-      workbook = XLSX.read(content, { type: "string", raw: true, FS: findDelimiter(content) });
+      workbook = XLSX.read(content, { type: "string", raw: true, FS: findDelimiter(content), sheetRows });
     }
   } catch (cause) {
     const detail = cause instanceof Error ? cause.message : String(cause);
@@ -82,8 +95,9 @@ export function readWorkbook(bytes: Uint8Array, fileName: string): RawSheet[] {
 }
 
 /** Every cell of a sheet as text. rows[0] is spreadsheet row 1, whatever the used range is. */
-function readSheet(sheet: XLSX.WorkSheet, usesDate1904: boolean): Pick<RawSheet, "rows" | "truncated"> {
-  if (!sheet["!ref"]) return { rows: [] };
+function readSheet(sheet: XLSX.WorkSheet | undefined, usesDate1904: boolean): Pick<RawSheet, "rows" | "truncated"> {
+  // A sheet the parser listed but could not build is treated as an empty one.
+  if (!sheet || !sheet["!ref"]) return { rows: [] };
   const used = XLSX.utils.decode_range(sheet["!ref"]);
   const lastRow = Math.min(used.e.r, LIMITS.rows - 1);
   const lastColumn = Math.min(used.e.c, LIMITS.columns - 1);
@@ -139,6 +153,40 @@ function dayNumberToIso(days: number, usesDate1904: boolean): string {
   const date: { y: number; m: number; d: number } = XLSX.SSF.parse_date_code(days, { date1904: usesDate1904 });
   const pad = (value: number) => String(value).padStart(2, "0");
   return `${date.y}-${pad(date.m)}-${pad(date.d)}`;
+}
+
+// --- Zip files ---------------------------------------------------------------------------------
+
+/**
+ * The size a zip says its files have once unpacked, read from its table of contents (the
+ * "central directory" at the end of the file) without unpacking anything.
+ *
+ * The sizes are what the file declares, and a file made to deceive can declare less. This stops
+ * honest exports that are simply huge, and the usual "zip bomb"; it is not a proof.
+ * A zip we cannot follow returns 0 and is left to the parser, which reports it as unreadable.
+ */
+function declaredUnpackedSize(bytes: Uint8Array): number {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const END_RECORD = 0x06054b50; // "PK 05 06": closes the file, 22 bytes plus an optional comment
+  const FILE_ENTRY = 0x02014b50; // "PK 01 02": one per file, 46 bytes plus three variable parts
+
+  let end = bytes.length - 22;
+  while (end >= 0 && view.getUint32(end, true) !== END_RECORD) end--;
+  if (end < 0) return 0;
+
+  const entries = view.getUint16(end + 10, true);
+  let at = view.getUint32(end + 16, true); // where the table of contents starts
+  let total = 0;
+  for (let n = 0; n < entries; n++) {
+    if (at + 46 > bytes.length || view.getUint32(at, true) !== FILE_ENTRY) return total;
+    // Offset 24: unpacked size. A file over 4 GB stores 0xFFFFFFFF here, which is over any limit.
+    total += view.getUint32(at + 24, true);
+    const nameLength = view.getUint16(at + 28, true);
+    const extraLength = view.getUint16(at + 30, true);
+    const commentLength = view.getUint16(at + 32, true);
+    at += 46 + nameLength + extraLength + commentLength;
+  }
+  return total;
 }
 
 // --- Text files --------------------------------------------------------------------------------

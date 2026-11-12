@@ -371,3 +371,17 @@ describe("a quantity column", () => {
     expect(assets.map((asset) => asset.warnings)).toEqual([["This row stands for 12 devices"], [], []]);
   });
 });
+
+describe("AC6: a doubtful value explains itself", () => {
+  const files = ["sample_assets_1.xlsx", "sample_assets_2.csv", "vn_headers_row7.xlsx", "semicolon_abbrev.csv", "no_header.tsv", "one_cell_per_asset.xls"];
+
+  it.each(files)("%s: every value below the 'check' threshold carries a note", (fileName) => {
+    const { assets } = run(fileName);
+    const silent = assets.flatMap((asset) =>
+      Object.entries(asset.fields)
+        .filter(([, field]) => field.confidence < LOW_CONFIDENCE && !field.note)
+        .map(([key, field]) => `${asset.id} ${key} ${field.raw} @${field.confidence}`),
+    );
+    expect(silent).toEqual([]);
+  });
+});

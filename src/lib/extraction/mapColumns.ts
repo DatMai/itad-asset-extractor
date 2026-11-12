@@ -11,10 +11,10 @@
  * a sentence that says where it came from.
  */
 import { COMBINED, FIELDS, targetLabel, type FieldDef } from "./fields";
-import { normaliseAssetType, normaliseDate, normaliseManufacturer } from "./normalise";
+import { normaliseAssetType, normaliseDate, normaliseManufacturer, normaliseRam, normaliseScreen, normaliseStorage, unitFromHeader } from "./normalise";
 import { parseFreeText } from "./parseFreeText";
 import { isPlaceholder, normaliseText, round, similarity, tokens } from "./text";
-import { FIELD_KEYS, type ColumnMapping, type ColumnTarget, type FieldKey } from "./types";
+import { FIELD_KEYS, type ColumnMapping, type ColumnTarget, type FieldKey, type Normalised } from "./types";
 import { findProductLine } from "./vocab";
 
 /** A guess weaker than this is not worth showing. */
@@ -45,6 +45,28 @@ const VALUE_ONLY_LIMIT: Partial<Record<ColumnTarget, number>> = {
 /** Fields that hold any text. Their values have no shape, so values cannot contradict the header. */
 const FREE_TEXT: ColumnTarget[] = ["notes", "assignedTo", "location", "costCentre"];
 
+/**
+ * Fields whose values have a strict shape, with the function that reads one cell (the same one
+ * the rows are read with later). A value it cannot read speaks against the header: "SSD" under
+ * "Disk Info" is not a storage size. CPU is not listed: its reader keeps any text as written.
+ */
+const READERS: Partial<Record<ColumnTarget, (value: string, header: string) => Normalised<string | number>>> = {
+  ramGB: (value, header) => normaliseRam(value, unitFromHeader(header)),
+  storageGB: (value, header) => normaliseStorage(value, unitFromHeader(header)),
+  screenInches: normaliseScreen,
+  purchaseDate: normaliseDate,
+};
+const canRead = (target: ColumnTarget, value: string, header: string) => READERS[target]?.(value, header).value != null;
+
+/**
+ * A machine can have several drives or memory modules, each in its own column ("HDD 1", "HDD 2").
+ * Only one column can feed a field, so the others are not added in. The column that got the field
+ * is held at this confidence, below LOW_CONFIDENCE, so that every one of its values is shown as
+ * "check this" and not as a total we are sure of.
+ */
+const SPLIT_SIZE_LIMIT = 0.6;
+const SIZE_FIELDS: ColumnTarget[] = ["ramGB", "storageGB"];
+
 const TARGETS: ColumnTarget[] = [...FIELD_KEYS, "combined"];
 const definitionOf = (target: ColumnTarget): FieldDef => (target === "combined" || target === "ignore" ? COMBINED : FIELDS[target]);
 /** How a kind of value is named in a reason: "3 of 3 values look like CPU". */
@@ -56,6 +78,8 @@ interface Candidate {
   parts?: (FieldKey | null)[];
   confidence: number;
   reason: string;
+  /** True when the header names the field; false when only the values point to it. */
+  named: boolean;
 }
 
 /**
@@ -69,10 +93,7 @@ export function mapColumns(headers: string[], rows: string[][]): ColumnMapping[]
 
   for (let index = 0; index < width; index++) {
     const header = (headers[index] ?? "").trim();
-    const values = rows
-      .map((row) => row[index] ?? "")
-      .filter((cell) => !isPlaceholder(cell))
-      .slice(0, SAMPLE_SIZE);
+    const values = sampleValues(rows, index);
     if (header === "" && values.length === 0) continue; // an empty column
     columns.push({ index, header: header || `Column ${columnLetter(index)}`, values });
     candidates.push(...candidatesFor(index, header, values));
@@ -82,30 +103,61 @@ export function mapColumns(headers: string[], rows: string[][]): ColumnMapping[]
   candidates.sort((a, b) => b.confidence - a.confidence || a.index - b.index);
   const chosen = new Map<number, Candidate>();
   const owner = new Map<ColumnTarget, number>(); // field -> column that got it
-  const lostField = new Map<number, ColumnTarget>(); // column -> field it wanted but lost
+  const lostField = new Map<number, Candidate>(); // column -> its best use, which another column got
   for (const candidate of candidates) {
     if (chosen.has(candidate.index)) continue;
     if (candidate.target !== "combined" && owner.has(candidate.target)) {
-      if (!lostField.has(candidate.index)) lostField.set(candidate.index, candidate.target);
+      if (!lostField.has(candidate.index)) lostField.set(candidate.index, candidate);
       continue;
     }
     chosen.set(candidate.index, candidate);
     owner.set(candidate.target, candidate.index);
   }
 
+  // A second drive or memory column: its header names a size field another column got, and its
+  // cells do hold sizes. Those sizes are not added to the field, so both columns must say so.
+  const uncounted = new Map<number, string[]>(); // column that got the field -> headers left out
+  const isUncountedSize = (column: { index: number; header: string; values: string[] }) => {
+    const lost = lostField.get(column.index);
+    if (!lost || chosen.has(column.index) || !lost.named || !SIZE_FIELDS.includes(lost.target)) return false;
+    return column.values.some((value) => canRead(lost.target, value, column.header));
+  };
+  for (const column of columns) {
+    if (!isUncountedSize(column)) continue;
+    const winner = owner.get(lostField.get(column.index)!.target)!;
+    uncounted.set(winner, [...(uncounted.get(winner) ?? []), column.header]);
+  }
+
   const headerOf = (index: number | undefined) => columns.find((column) => column.index === index)?.header;
-  return columns.map(({ index, header, values }): ColumnMapping => {
+  return columns.map((column): ColumnMapping => {
+    const { index, header, values } = column;
     const samples = [...new Set(values)].slice(0, 3);
     const pick = chosen.get(index);
     if (pick) {
-      return { index, header, target: pick.target, parts: pick.parts, confidence: round(pick.confidence, 2), reason: pick.reason, source: "rules", samples };
+      const leftOut = uncounted.get(index);
+      const confidence = leftOut ? Math.min(pick.confidence, SPLIT_SIZE_LIMIT) : pick.confidence;
+      const reason = leftOut
+        ? `${pick.reason}; ${leftOut.map((name) => `"${name}"`).join(", ")} also holds sizes and is not added to this one, so check each value`
+        : pick.reason;
+      return { index, header, target: pick.target, parts: pick.parts, confidence: round(confidence, 2), reason, source: "rules", samples };
     }
-    const lost = lostField.get(index);
-    const reason = lost
-      ? `${targetLabel(lost)} is already taken by "${headerOf(owner.get(lost))}"`
-      : "No matching field; kept as extra data";
+    const lost = lostField.get(index)?.target;
+    let reason = "No matching field; kept as extra data";
+    if (lost) reason = `${targetLabel(lost)} is already taken by "${headerOf(owner.get(lost))}"`;
+    if (isUncountedSize(column)) reason += "; the sizes in this column are not added to it, they are kept as extra data";
     return { index, header, target: "ignore", confidence: 0, reason, source: "rules", samples };
   });
+}
+
+/** The first values of a column that hold something. Stops early: a sheet can have 5,000 rows. */
+function sampleValues(rows: string[][], index: number): string[] {
+  const values: string[] = [];
+  for (const row of rows) {
+    const cell = row[index] ?? "";
+    if (!isPlaceholder(cell)) values.push(cell);
+    if (values.length === SAMPLE_SIZE) break;
+  }
+  return values;
 }
 
 /** Every plausible use of one column, each with its confidence and reason. */
@@ -117,7 +169,7 @@ function candidatesFor(index: number, header: string, values: string[]): Candida
   const parts = suggested.name?.score === 1 ? null : partsOfHeader(header);
   if (parts) {
     const labels = parts.map((part) => (part ? FIELDS[part].label : "?")).join(", ");
-    return [{ index, target: "combined", parts, confidence: 0.95, reason: `The header lists ${labels}, in that order` }];
+    return [{ index, target: "combined", parts, confidence: 0.95, reason: `The header lists ${labels}, in that order`, named: true }];
   }
 
   const kinds = kindsOf(values);
@@ -127,9 +179,8 @@ function candidatesFor(index: number, header: string, values: string[]): Candida
     let reason: string;
 
     if (name) {
-      // The header names this field. Values that look like something else count against it;
-      // values we cannot classify (names, places) count neither way.
-      const odd = FREE_TEXT.includes(target) ? 0 : kinds.filter((kind) => kind !== null && !fitsNamedColumn(kind, target)).length;
+      // The header names this field. Values that do not belong under it count against it.
+      const odd = FREE_TEXT.includes(target) ? 0 : values.filter((value, i) => speaksAgainst(kinds[i], value, target, header)).length;
       const against = values.length > 0 ? odd / values.length : 0;
       confidence = name.score * (1 - 0.4 * against);
       reason = against >= 0.3 ? `${name.reason}, but ${odd} of ${values.length} values look like something else` : name.reason;
@@ -147,7 +198,7 @@ function candidatesFor(index: number, header: string, values: string[]): Candida
         reason += `, although the header "${header}" suggests ${targetLabel(suggested.target)}`;
       }
     }
-    if (confidence >= MIN_CONFIDENCE) candidates.push({ index, target, confidence, reason });
+    if (confidence >= MIN_CONFIDENCE) candidates.push({ index, target, confidence, reason, named: name !== null });
   }
   return candidates;
 }
@@ -172,6 +223,9 @@ function nameScore(header: string, field: FieldDef): { score: number; reason: st
     .filter((synonym) => synonym.split(" ").every((word) => words.includes(word)))
     .sort((a, b) => b.length - a.length)[0];
   if (inside) {
+    // "HDD Type", "Memory Slots": the extra word says the column holds something else.
+    const extra = words.filter((word) => !inside.split(" ").includes(word));
+    if (extra.some((word) => field.notWith?.includes(word))) return null;
     const share = inside.split(" ").length / words.length;
     return { score: 0.7 + 0.25 * share, reason: `"${header}" contains "${inside}"` };
   }
@@ -247,6 +301,14 @@ function fitsNamedColumn(kind: ValueKind, target: ColumnTarget): boolean {
   if (kind === "serialNumber" || kind === "assetTag") return ["serialNumber", "assetTag", "model"].includes(target);
   // A model cell often carries the brand or the specs as well; rows deal with that.
   return kind === "combined" && target === "model";
+}
+
+/** Does one value speak against a column whose header says `target`? */
+function speaksAgainst(kind: ValueKind | null, value: string, target: ColumnTarget, header: string): boolean {
+  if (kind !== null) return !fitsNamedColumn(kind, target);
+  // A value we cannot classify (a name, a place, "SSD", a bare number) counts neither way,
+  // unless the field has a strict shape and its own reader cannot read the value either.
+  return target in READERS && !canRead(target, value, header);
 }
 
 /** Without a header to lean on, the size itself decides: small is RAM, large is storage. */

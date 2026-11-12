@@ -3,7 +3,7 @@
  * Both are pure functions that return a new plan or new assets, so the UI can keep the edits in
  * state and re-apply them after every re-extraction.
  */
-import { NORMALISERS } from "./extractAssets";
+import { DUPLICATE_SERIAL_PREFIX, flagDuplicateSerials, NO_SERIAL_WARNING, NORMALISERS } from "./extractAssets";
 import { targetLabel } from "./fields";
 import { ASSET_TYPES, type Asset, type AssetType, type ColumnTarget, type FieldKey, type FieldValue, type SheetPlan } from "./types";
 
@@ -39,7 +39,8 @@ export interface Edits {
 export const NO_EDITS: Edits = { values: {}, kinds: {} };
 
 export function applyEdits(assets: Asset[], edits: Edits): Asset[] {
-  return assets.map((asset) => {
+  let serialEdited = false;
+  const edited = assets.map((asset) => {
     const typed = edits.values[asset.id];
     const kind = edits.kinds[asset.id];
     if (!typed && !kind) return asset;
@@ -48,8 +49,30 @@ export function applyEdits(assets: Asset[], edits: Edits): Asset[] {
     for (const [key, text] of Object.entries(typed ?? {}) as [FieldKey, string][]) {
       fields[key] = editedValue(key, text, asset.fields[key]);
     }
-    return kind ? { ...asset, fields, kind, kindReason: kind === "computer" ? undefined : "marked by you" } : { ...asset, fields };
+    const changed = kind ? { ...asset, fields, kind, kindReason: kind === "computer" ? undefined : "marked by you" } : { ...asset, fields };
+    if (typed?.serialNumber !== undefined) {
+      serialEdited = true;
+      return withSerialWarning(changed);
+    }
+    // "No serial number" is a warning about computers. A row the user sets aside loses it.
+    return kind === "not-a-computer" ? withSerialWarning(changed) : changed;
   });
+  // The duplicate warnings were written before the edits. Only a serial number edit can make
+  // them wrong.
+  return serialEdited ? flagDuplicateSerials(edited.map(withoutDuplicateWarning)) : edited;
+}
+
+/** After an edit: "No serial number" must say what the row holds now. Only computers get it. */
+function withSerialWarning(asset: Asset): Asset {
+  const warnings = asset.warnings.filter((warning) => warning !== NO_SERIAL_WARNING);
+  const isMissing = asset.kind === "computer" && !asset.fields.serialNumber?.value;
+  return { ...asset, warnings: isMissing ? [...warnings, NO_SERIAL_WARNING] : warnings };
+}
+
+/** Duplicates are found again from scratch, so the old warning goes, also from rows not edited. */
+function withoutDuplicateWarning(asset: Asset): Asset {
+  const warnings = asset.warnings.filter((warning) => !warning.startsWith(DUPLICATE_SERIAL_PREFIX));
+  return warnings.length === asset.warnings.length ? asset : { ...asset, warnings };
 }
 
 /** Typed text goes through the same normaliser as file text, so "32" becomes 32 and "i7-1185G7" a full CPU name. */

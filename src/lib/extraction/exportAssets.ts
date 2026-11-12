@@ -4,7 +4,7 @@
  * leaves the app.
  */
 import { z } from "zod";
-import { ASSET_TYPES, LOW_CONFIDENCE, type Asset, type AssetType, type FieldKey } from "./types";
+import { ASSET_TYPES, FIELD_KEYS, LOW_CONFIDENCE, type Asset, type AssetType, type FieldKey } from "./types";
 
 export const ExportedAssetSchema = z.object({
   assetType: z.enum(ASSET_TYPES).nullable(),
@@ -29,6 +29,13 @@ export const ExportedAssetSchema = z.object({
   /** The lowest confidence among the row's extracted values, 0–1. */
   confidence: z.number().min(0).max(1),
   needsReview: z.boolean(),
+  /** The row's warnings joined with "; ", so a needsReview flag set by a warning has its reason. */
+  warnings: z.string().nullable(),
+  /**
+   * The fields the user typed by hand, separated by spaces, e.g. "model storageGB". storageRaw
+   * always holds the file's text, so after an edit it can differ from storageGB; this says why.
+   */
+  editedFields: z.string().nullable(),
 });
 export type ExportedAsset = z.infer<typeof ExportedAssetSchema>;
 
@@ -50,6 +57,7 @@ export function toExportRows(assets: Asset[]): ExportedAsset[] {
     };
     const type = textOf("assetType");
     const confidences = Object.values(asset.fields).map((field) => field.confidence);
+    const editedFields = FIELD_KEYS.filter((key) => asset.fields[key]?.source === "manual");
 
     return ExportedAssetSchema.parse({
       assetType: ASSET_TYPES.includes(type as AssetType) ? type : null,
@@ -71,6 +79,8 @@ export function toExportRows(assets: Asset[]): ExportedAsset[] {
       sourceRow: asset.rowNumber,
       confidence: confidences.length > 0 ? Math.min(...confidences) : 1,
       needsReview: needsReview(asset),
+      warnings: asset.warnings.length > 0 ? asset.warnings.join("; ") : null,
+      editedFields: editedFields.length > 0 ? editedFields.join(" ") : null,
     });
   });
 }

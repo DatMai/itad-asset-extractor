@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { applyEdits, setColumnTarget } from "./edits";
-import { extractSheet, planSheet } from "./pipeline";
+import { needsReview } from "./exportAssets";
+import { extractAll, extractSheet, planSheet } from "./pipeline";
 import type { RawSheet } from "./types";
 
 const sheet: RawSheet = {
@@ -84,5 +85,82 @@ describe("applyEdits", () => {
   it("leaves untouched assets as they are", () => {
     const result = applyEdits(assets, { values: { [first.id]: { ramGB: "32" } }, kinds: {} });
     expect(result[1]).toBe(assets[1]);
+  });
+});
+
+describe("applyEdits: warnings about serial numbers follow the edited values", () => {
+  const serials: RawSheet = {
+    name: "S",
+    hidden: false,
+    rows: [
+      ["Model", "Serial", "RAM"],
+      ["Dell Latitude 5420", "ABC1234", "16GB"],
+      ["HP ProDesk 400 G7", "", "8GB"],
+      ["Lenovo ThinkPad T14", "ABC1234", "16GB"],
+      ["Dell OptiPlex 7090", "9JZL5N2", "32GB"],
+    ],
+  };
+  const { assets } = extractAll([planSheet(serials)]);
+  const [row2, row3, row4, row5] = assets;
+  const edit = (values: Record<string, { serialNumber: string }>) => applyEdits(assets, { values, kinds: {} });
+
+  it("starts from the warnings of the extraction", () => {
+    expect(assets.map((asset) => asset.warnings)).toEqual([
+      ["Same serial number as S row 4"],
+      ["No serial number"],
+      ["Same serial number as S row 2"],
+      [],
+    ]);
+  });
+
+  it("drops 'No serial number' once the user types one, so the row no longer needs review", () => {
+    const edited = edit({ [row3.id]: { serialNumber: "ZZZ9999" } });
+    expect(edited[1].fields.serialNumber).toMatchObject({ value: "ZZZ9999", source: "manual" });
+    expect(edited[1].warnings).toEqual([]);
+    expect(needsReview(edited[1])).toBe(false);
+  });
+
+  it("drops the duplicate warning from both rows when one of them is corrected", () => {
+    const edited = edit({ [row4.id]: { serialNumber: "QQQ1111" } });
+    expect(edited[0].warnings).toEqual([]);
+    expect(edited[2].warnings).toEqual([]);
+  });
+
+  it("warns about a duplicate the edit creates", () => {
+    const edited = edit({ [row3.id]: { serialNumber: "9JZL5N2" } });
+    expect(edited[1].warnings).toEqual(["Same serial number as S row 5"]);
+    expect(edited[3].warnings).toEqual(["Same serial number as S row 3"]);
+    expect(edited[0].warnings).toEqual(["Same serial number as S row 4"]); // the old pair is still a pair
+  });
+
+  it("warns when the user clears the serial number of a computer", () => {
+    const edited = edit({ [row5.id]: { serialNumber: "" } });
+    expect(edited[3].warnings).toEqual(["No serial number"]);
+  });
+
+  it("keeps the other warnings of a row", () => {
+    const counted = assets.map((asset) => (asset === row3 ? { ...asset, warnings: ["This row stands for 12 devices", ...asset.warnings] } : asset));
+    const edited = applyEdits(counted, { values: { [row3.id]: { serialNumber: "ZZZ9999" } }, kinds: {} });
+    expect(edited[1].warnings).toEqual(["This row stands for 12 devices"]);
+  });
+
+  it("drops 'No serial number' when the user says the row is not a computer", () => {
+    const edited = applyEdits(assets, { values: {}, kinds: { [row3.id]: "not-a-computer" } });
+    expect(edited[1].kind).toBe("not-a-computer");
+    expect(edited[1].warnings).toEqual([]);
+    // The edits are laid over the extraction each time, so undoing the edit brings it back.
+    expect(applyEdits(assets, { values: {}, kinds: {} })[1].warnings).toEqual(["No serial number"]);
+  });
+
+  it("keeps the other warnings of a row that is marked as not a computer", () => {
+    const counted = assets.map((asset) => (asset === row3 ? { ...asset, warnings: ["This row stands for 12 devices", ...asset.warnings] } : asset));
+    const edited = applyEdits(counted, { values: {}, kinds: { [row3.id]: "not-a-computer" } });
+    expect(edited[1].warnings).toEqual(["This row stands for 12 devices"]);
+  });
+
+  it("does not touch the warnings when the edit is about another field", () => {
+    const edited = applyEdits(assets, { values: { [row2.id]: { ramGB: "32" } }, kinds: {} });
+    expect(edited.map((asset) => asset.warnings)).toEqual(assets.map((asset) => asset.warnings));
+    expect(edited[2]).toBe(assets[2]);
   });
 });

@@ -230,3 +230,92 @@ describe("mapColumns: columns it should leave alone", () => {
     expect(mapColumns(["Serial", "", "Model"], [["A1B2C3D", "", "Latitude 5420"]]).map((column) => column.index)).toEqual([0, 2]);
   });
 });
+
+describe("mapColumns: a header that names a property of a part, not its size", () => {
+  // The layout of many audit-tool exports. "HDD Type" and "HDD Size" both contain "hdd".
+  const rows = [
+    ["Latitude 5420", "7HKQ2M3", "SSD", "256GB", "DDR4", "8GB", "2.4GHz", "Intel Core i5-1145G7"],
+    ["EliteBook 840 G8", "5CG1234XYZ", "SSD", "512GB", "DDR4", "16GB", "2.8GHz", "Intel Core i7-1165G7"],
+    ["ThinkPad T14", "PF2ABCDE", "HDD", "1TB", "DDR4", "16GB", "1.8GHz", "AMD Ryzen 5 PRO 4650U"],
+  ];
+
+  it("gives storage and RAM to the size columns, whichever side the type column is on", () => {
+    const headers = ["Model", "Serial Number", "HDD Type", "HDD Size", "RAM Type", "RAM Size", "Processor Speed", "Processor"];
+    const result = targets(headers, rows);
+    expect(result["HDD Size"]).toBe("storageGB");
+    expect(result["RAM Size"]).toBe("ramGB");
+    expect(result["Processor"]).toBe("cpu");
+    expect(result["HDD Type"]).toBe("ignore");
+    expect(result["RAM Type"]).toBe("ignore");
+    expect(result["Processor Speed"]).toBe("ignore");
+
+    // The same table with each pair of columns swapped.
+    const swap = (row: string[]) => [row[0], row[1], row[3], row[2], row[5], row[4], row[7], row[6]];
+    const swapped = targets(swap(headers), rows.map(swap));
+    expect(swapped["HDD Size"]).toBe("storageGB");
+    expect(swapped["RAM Size"]).toBe("ramGB");
+    expect(swapped["HDD Type"]).toBe("ignore");
+  });
+
+  it("does not read a slot count as RAM or a drive's serial number as storage", () => {
+    const headers = ["Model", "Serial Number", "HDD Serial", "Memory Slots"];
+    const result = targets(headers, [
+      ["Latitude 5420", "7HKQ2M3", "1234567890", "2"],
+      ["EliteBook 840 G8", "5CG1234XYZ", "9876543210", "2"],
+    ]);
+    expect(result["Serial Number"]).toBe("serialNumber");
+    expect(result["Memory Slots"]).toBe("ignore");
+    expect(result["HDD Serial"]).toBe("ignore");
+  });
+
+  it("still accepts extra words that do not change the meaning", () => {
+    expect(targets(["Total RAM", "HDD Capacity", "Processor Type"], [["16GB", "512GB", "Intel Core i5-1145G7"]])).toEqual({
+      "Total RAM": "ramGB",
+      "HDD Capacity": "storageGB",
+      "Processor Type": "cpu",
+    });
+  });
+
+  it("lets readable values break a tie between two columns named alike", () => {
+    // Neither header has a tell-tale word; only one column holds sizes.
+    const result = mapColumns(["Disk Info", "Disk Space"], [["SATA", "256GB"], ["NVMe", "512GB"], ["SATA", "1TB"]]);
+    expect(result.map((column) => column.target)).toEqual(["ignore", "storageGB"]);
+    expect(byHeader(["Screen"], [["Full HD"], ["IPS"]], "Screen").confidence).toBeLessThan(LOW_CONFIDENCE);
+    // A bare number is readable, so it does not count against the header.
+    expect(byHeader(["RAM (GB)"], [["16"], ["8"]], "RAM (GB)")).toMatchObject({ target: "ramGB", confidence: 1 });
+  });
+});
+
+describe("mapColumns: a second drive or memory column", () => {
+  const headers = ["Manufacturer", "Model", "Serial", "CPU", "RAM", "HDD 1", "HDD 2", "Notes"];
+  const rows = [["Dell", "Precision 5820", "ABCD123", "Xeon W-2133", "32GB", "512GB SSD", "2TB HDD", "ok"]];
+
+  it("flags the storage column that won, because the other drive is not added to it", () => {
+    const first = byHeader(headers, rows, "HDD 1");
+    expect(first.target).toBe("storageGB");
+    expect(first.confidence).toBeLessThan(LOW_CONFIDENCE);
+    expect(first.reason).toMatch(/"HDD 2" also holds sizes and is not added/);
+  });
+
+  it("says on the column that lost that its sizes are not counted", () => {
+    const second = byHeader(headers, rows, "HDD 2");
+    expect(second.target).toBe("ignore");
+    expect(second.reason).toMatch(/already taken by "HDD 1"/);
+    expect(second.reason).toMatch(/not added/);
+  });
+
+  it("does the same for SSD next to HDD, and for two memory columns", () => {
+    const drives = mapColumns(["Serial", "SSD", "HDD"], [["ABCD123", "256GB", "1TB"]]);
+    expect(drives[1]).toMatchObject({ target: "storageGB" });
+    expect(drives[1].confidence).toBeLessThan(LOW_CONFIDENCE);
+
+    const memory = mapColumns(["Serial", "RAM 1", "RAM 2"], [["ABCD123", "16GB", "16GB"]]);
+    expect(memory[1].target).toBe("ramGB");
+    expect(memory[1].confidence).toBeLessThan(LOW_CONFIDENCE);
+  });
+
+  it("does not flag a column because of a neighbour that holds no sizes", () => {
+    const result = mapColumns(["Storage", "Disk Info"], [["512GB", "SATA"], ["1TB", "NVMe"]]);
+    expect(result[0]).toMatchObject({ target: "storageGB", confidence: 1 });
+  });
+});

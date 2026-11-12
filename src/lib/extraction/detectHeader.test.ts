@@ -108,4 +108,31 @@ describe("detectHeader", () => {
     // A footer below the data: nothing under it.
     expect(detectHeader([...data, [], ["Notes:", "call Kevin before collection"]]).rowIndex).toBeNull();
   });
+
+  it("says what it measured when it picks a row of unknown names", () => {
+    // Row 1 is also made only of labels and comes first; row 3 wins because it has more of them.
+    const guess = detectHeader([["Name", "Place"], ["x"], ["Alpha", "Beta", "Gamma"], ["Delta", "Eps", "Zeta"]]);
+    expect(guess.rowIndex).toBe(2);
+    expect(guess.confidence).toBe(0.5);
+    expect(guess.reason).toBe("Row 3: none of its cells is a column name we know, but it has the most cells that read like labels and a table under it");
+    expect(guess.reason).not.toMatch(/first row/);
+  });
+
+  it("still finds a header that has property columns such as HDD Type beside the size columns", () => {
+    const guess = detectHeader([
+      ["Audit export"],
+      ["Model", "Serial Number", "HDD Type", "HDD Size", "RAM Type", "RAM Size", "Processor Speed", "Processor"],
+      ["Latitude 5420", "7HKQ2M3", "SSD", "256GB", "DDR4", "8GB", "2.4GHz", "Intel Core i5-1145G7"],
+    ]);
+    expect(guess.rowIndex).toBe(1);
+    expect(guess.reason).toBe("Row 2: 5 of 8 cells are column names we know");
+  });
+
+  it("looks past blank rows for the table under a header, and gives the same answer on a long sheet", () => {
+    const header = ["Type", "Brand", "Model", "Serial"];
+    const row = ["Laptop", "Dell", "Latitude 5420", "7HKQ2M3"];
+    expect(detectHeader([header, [], ["", ""], row]).rowIndex).toBe(0);
+    const long = [["Register"], header, ...Array.from({ length: 5000 }, () => row)];
+    expect(detectHeader(long)).toEqual(detectHeader(long.slice(0, 40)));
+  });
 });

@@ -104,7 +104,10 @@ export interface FieldValue {
   /** 0..1: how sure we are that `value` is right. */
   confidence: number;
   source: FieldSource;
-  /** Why the confidence is not 1, or where the value came from. Shown as a tooltip. */
+  /**
+   * Why the confidence is not 1, or where the value came from. Shown as a tooltip.
+   * Every extracted value below LOW_CONFIDENCE has one.
+   */
   note?: string;
 }
 
@@ -118,9 +121,9 @@ export interface Asset {
   /** For a non-computer: what it looks like, e.g. "monitor". */
   kindReason?: string;
   fields: Partial<Record<FieldKey, FieldValue>>;
-  /** Data-quality remarks about the row, e.g. a duplicated serial number. */
+  /** Data-quality remarks about the row, e.g. a duplicated serial number. Exported, joined with "; ". */
   warnings: string[];
-  /** Cells of columns that were not mapped, keyed by header, so nothing in the file is lost. */
+  /** Cells of columns that were not mapped, keyed by header. Shown on screen; not in the export. */
   extras: Record<string, string>;
 }
 

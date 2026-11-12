@@ -7,7 +7,7 @@
  *   +1 for a cell that could be a label (short text that is not data)
  *   -2 for a cell that is clearly data (a CPU, a capacity, a date, a number)
  * A candidate must also have a table under it. The best positive score wins; on a tie the
- * higher row wins. Asset lists are mostly text, so
+ * row nearer the top wins. Asset lists are mostly text, so
  * "the row where types change from text to numbers" would not work here; names do.
  */
 import { isKnownColumnName, kindOfValue } from "./mapColumns";
@@ -23,11 +23,13 @@ export function detectHeader(rows: string[][]): HeaderGuess {
   const isSingleColumn = top.every((cells) => cells.length <= 1);
 
   for (const [rowIndex, cells] of top.entries()) {
-    const named = cells.filter(isKnownColumnName).length;
+    // Classify each cell once: comparing a cell with every known name is the costly step.
+    const isName = cells.map(isKnownColumnName);
+    const named = isName.filter(Boolean).length;
     // Otherwise one cell alone is a title or a note, never a header.
     if (cells.length < 2 && !(isSingleColumn && named === 1)) continue;
 
-    const data = cells.filter((cell) => !isKnownColumnName(cell) && looksLikeData(cell)).length;
+    const data = cells.filter((cell, position) => !isName[position] && looksLikeData(cell)).length;
     const labels = cells.length - named - data;
 
     // A header is made of names. A row with data in it only qualifies if it also has two
@@ -36,7 +38,7 @@ export function detectHeader(rows: string[][]): HeaderGuess {
 
     // A header has a table under it. A footer has nothing below; a title such as
     // "Location: | Sydney" is much narrower than the rows it sits on.
-    const below = rows.slice(rowIndex + 1).map(filled).filter((count) => count > 0).slice(0, 5);
+    const below = widthsBelow(rows, rowIndex);
     const typicalWidth = below.sort((a, b) => a - b)[Math.floor(below.length / 2)];
     if (below.length === 0 || typicalWidth >= cells.length * 2) continue;
 
@@ -56,7 +58,7 @@ export function detectHeader(rows: string[][]): HeaderGuess {
     return {
       rowIndex: best.rowIndex,
       confidence: 0.5,
-      reason: `Row ${rowNumber}: none of its cells is a column name we know, but it is the first row made only of labels`,
+      reason: `Row ${rowNumber}: none of its cells is a column name we know, but it has the most cells that read like labels and a table under it`,
     };
   }
   return {
@@ -68,6 +70,16 @@ export function detectHeader(rows: string[][]): HeaderGuess {
 
 /** How many cells of a row hold something. */
 const filled = (row: string[]) => row.filter((cell) => cell.trim() !== "").length;
+
+/** The widths of the first five non-empty rows under a row. Stops there: the sheet can be long. */
+function widthsBelow(rows: string[][], rowIndex: number): number[] {
+  const widths: number[] = [];
+  for (let i = rowIndex + 1; i < rows.length && widths.length < 5; i++) {
+    const count = filled(rows[i]);
+    if (count > 0) widths.push(count);
+  }
+  return widths;
+}
 
 /** A cell that holds a value, not a title: something recognisable, a bare number, or a long text. */
 function looksLikeData(cell: string): boolean {

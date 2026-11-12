@@ -18,7 +18,16 @@ export interface FieldDef {
    * but "Storage Type" must not match it.
    */
   wholeHeaderOnly?: string[];
+  /**
+   * Words that change what the column holds when they stand next to a name of this field:
+   * "HDD Type" holds "SSD", "Memory Slots" holds a count. A header that contains a synonym and
+   * one of these words is not taken as this field.
+   */
+  notWith?: string[];
 }
+
+/** Next to "HDD" or "RAM" these words name a property of the part, not how large it is. */
+const NOT_A_CAPACITY = ["type", "serial", "slot", "slots", "speed", "status", "wiped", "interface", "health", "count", "make", "model", "brand"];
 
 export const FIELDS: Record<FieldKey, FieldDef> = {
   assetType: {
@@ -45,15 +54,19 @@ export const FIELDS: Record<FieldKey, FieldDef> = {
     label: "CPU",
     synonyms: ["cpu", "processor", "proc", "chipset", "vi xu ly", "bo xu ly", "bo vi xu ly"],
     wholeHeaderOnly: ["chip"],
+    // "Processor Type" and "CPU Model" do hold the processor's name, so they are not listed.
+    notWith: ["speed", "count"],
   },
   ramGB: {
     label: "RAM (GB)",
     synonyms: ["ram", "memory", "mem", "bo nho", "bo nho trong", "dung luong ram"],
+    notWith: NOT_A_CAPACITY,
   },
   storageGB: {
     label: "Storage (GB)",
     synonyms: ["storage", "hdd", "ssd", "hdd ssd", "disk", "hard drive", "hard disk", "o cung", "o dia", "luu tru"],
     wholeHeaderOnly: ["capacity", "drive", "drives", "dung luong"],
+    notWith: NOT_A_CAPACITY,
   },
   screenInches: {
     label: "Screen (in)",

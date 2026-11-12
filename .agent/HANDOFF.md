@@ -4,8 +4,8 @@ The state of the work, for whoever picks it up next. Format and rules: `.agent/P
 
 ## State right now
 
-- **Branch:** all work is on `feat/asset-extraction`; `main` holds only the scaffold commit.
-  Nothing has been pushed. There is no remote yet.
+- **Branch:** `main` and `feat/asset-extraction` point at the same commit and are pushed to
+  `origin` (https://github.com/DatMai/itad-asset-extractor, public).
 - **Works, with proof:**
   - `pnpm typecheck`, `pnpm lint`, `pnpm test` (287 tests) and `pnpm build` pass.
     Last run: `.local-map/evidence/checks/latest.txt`.
@@ -22,8 +22,8 @@ The state of the work, for whoever picks it up next. Format and rules: `.agent/P
   - A real password-protected workbook.
   - Browsers other than Chromium; screen readers; narrow screens.
   - Deployment.
-- **Not done:** deploy to Vercel; push to a Git host; the author's own review
-  (`.local-map/REVIEW.md`, section 2).
+- **Not done:** deploy to Vercel; send the repository link to Astek; the author's written
+  review notes (`.local-map/REVIEW.md`, section 2).
 
 ## In progress
 
@@ -31,8 +31,8 @@ Nothing is claimed.
 
 ## Next up
 
-1. Author review: work through the checklist in `.local-map/REVIEW.md` and add notes.
-2. Merge `feat/asset-extraction` into `main`, create the remote, push.
+1. Reply to the Astek email with the repository link before 12:00 on Friday 13 November.
+2. Rehearse the five-minute demo in the README; try a few unseen files.
 3. Optional: deploy to Vercel; add the URL to the README.
 4. Optional: put a real key in `.env.local`, click "Ask AI" on the *No header row* sample, and
    record what the model answers.
@@ -52,6 +52,12 @@ Nothing is claimed.
   `.env` files on this machine). It is ignored by git and harmless; delete it by hand if unwanted.
 
 ## Log
+
+### 2026-11-12 09:40 Extraction engineer: released
+- Changed: merged into `main`, created the public GitHub repository, pushed both branches.
+  Commit messages were rewritten before the first push, so hashes differ from earlier notes.
+- Verified: typecheck, lint, 287 tests on the pushed commit; the author tried the app by hand.
+- Next: send the link; optional deploy.
 
 ### 2026-11-11 23:40 Extraction engineer: first complete version
 - Changed: everything. Pipeline, UI, optional AI route, tests, fixtures, README, map.

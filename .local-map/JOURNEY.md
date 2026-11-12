@@ -133,7 +133,7 @@ Append-only log. Newest at the bottom. Times are Vietnam time (GMT+7).
 ### 23:36 Review as the client's engineer
 
 - Four data bugs and four UI issues found after the tests were green; each got a failing test
-  first. Listed in `REVIEW.md`. Commit `865df00`.
+  first. Listed in `REVIEW.md`. Commit `fd82557`.
 - Measured speed at the row limit: 5,000 rows, plan 167 ms, extract 136 ms (Node).
 
 ### 23:39 README, map and handoff

@@ -7,7 +7,7 @@ Two reviews are recorded here: the one the agent ran on its own work, and the au
 Method: after all tests were green, read the code looking for inputs the tests did not cover,
 following the checklist in `.claude/agents/reviewer.md` (wrong data first, then spec, failure
 paths, tests, explainability, privacy). Each finding got a failing test before the fix.
-Fixes are in commit `865df00`.
+Fixes are in commit `fd82557`.
 
 ### Data bugs found and fixed
 

@@ -626,3 +626,45 @@ describe("parseFreeText: a part named as absent", () => {
     expect(parsed.storageGB).toBeUndefined();
   });
 });
+
+describe("parseFreeText: a serial number written in the description", () => {
+  it("reads a labelled serial and keeps it out of the model", () => {
+    const parsed = parseFreeText('Lenovo ThinkPad T490 i5-8365U 8GB 256GB SSD 14" S/N PF1ZK2AB');
+    expect(parsed.serialNumber).toMatchObject({ value: "PF1ZK2AB", raw: "S/N PF1ZK2AB", confidence: 0.9 });
+    expect(values(parsed)).toMatchObject({
+      manufacturer: "Lenovo",
+      model: "ThinkPad T490",
+      cpu: "Intel Core i5-8365U",
+      ramGB: 8,
+      storageGB: 256,
+      screenInches: 14,
+    });
+  });
+
+  it.each([
+    ["Dell Latitude 5420 16GB 512GB SN: 7HKQ2M3", "7HKQ2M3"],
+    ["HP EliteBook 840 G8, Serial No. 5CG1234XYZ, 16GB", "5CG1234XYZ"],
+    ["Dell OptiPlex 7090 (Service Tag 9JZL5N2) i7-10700", "9JZL5N2"],
+    ["Apple MacBook Air M2 8GB 256GB serial number: FVFHK2Q1Q6L4", "FVFHK2Q1Q6L4"],
+    ["Lenovo ThinkCentre M720q s/n#PC0A1B2C 16GB", "PC0A1B2C"],
+  ])("%j -> %s", (text, serial) => {
+    expect(parseFreeText(text).serialNumber?.value).toBe(serial);
+  });
+
+  it("does not read the size inside a serial as RAM or storage", () => {
+    const parsed = parseFreeText("HP EliteBook 840 G5 S/N 5CG8GB16TB i5-8350U");
+    expect(parsed.serialNumber?.value).toBe("5CG8GB16TB");
+    expect(parsed.ramGB).toBeUndefined();
+    expect(parsed.storageGB).toBeUndefined();
+  });
+
+  it("needs the label: a code on its own is not called a serial number", () => {
+    expect(parseFreeText("Lenovo ThinkPad T490 PF1ZK2AB 8GB").serialNumber).toBeUndefined();
+  });
+
+  it("needs a believable value after the label", () => {
+    expect(parseFreeText("Dell Latitude 5420 S/N unknown 16GB").serialNumber).toBeUndefined();
+    expect(parseFreeText("Dell Latitude 5420 serial port, 16GB").serialNumber).toBeUndefined();
+    expect(parseFreeText("HP ProLiant DL380 SNMP card 64GB").serialNumber).toBeUndefined();
+  });
+});

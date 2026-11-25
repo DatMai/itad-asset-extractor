@@ -43,7 +43,7 @@ export const FIELDS: Record<FieldKey, FieldDef> = {
   model: {
     label: "Model",
     synonyms: ["model", "model name", "model number", "model no", "product name", "dong may", "ten may", "kieu may"],
-    wholeHeaderOnly: ["product", "mau"],
+    wholeHeaderOnly: ["product", "mau", "machine"],
   },
   serialNumber: {
     label: "Serial number",

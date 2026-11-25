@@ -217,3 +217,27 @@ describe("flagDuplicateSerials", () => {
     expect(flagged.every((asset) => asset.warnings[0].length < 100)).toBe(true);
   });
 });
+
+describe("a serial number written inside a description", () => {
+  it("fills the serial number when the file has no serial column", () => {
+    const { assets } = extract([
+      ["Qty", "Item", "Condition"],
+      ["1", 'Lenovo ThinkPad T490 i5-8365U 8GB 256GB SSD 14" S/N PF1ZK2AB', "Grade A"],
+      ["1", "HP ProBook 450 G7, Core i5-10210U, 16 GB, 512 GB SSD", "Grade B"],
+    ]);
+    expect(assets[0].fields.serialNumber).toMatchObject({ value: "PF1ZK2AB", source: "parsed" });
+    expect(assets[0].fields.model?.value).toBe("ThinkPad T490");
+    expect(assets[1].fields.serialNumber?.value ?? null).toBeNull();
+  });
+
+  it("gives way to the serial column, and fills it only where that column is empty", () => {
+    const { assets } = extract([
+      ["Description", "Serial", "CPU", "RAM"],
+      ["Dell Latitude 5490 S/N OLD12345", "7HKQ2M3", "i5-8350U", "8GB"],
+      ["Dell Latitude 5490 S/N 8XYZ1A2", "", "i5-8350U", "8GB"],
+    ]);
+    expect(assets[0].fields.serialNumber).toMatchObject({ value: "7HKQ2M3", source: "column" });
+    expect(assets[1].fields.serialNumber).toMatchObject({ value: "8XYZ1A2", source: "parsed" });
+    expect(assets[1].warnings).not.toContain("No serial number");
+  });
+});

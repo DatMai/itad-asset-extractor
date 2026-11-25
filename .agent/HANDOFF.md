@@ -8,7 +8,7 @@ The state of the work, for whoever picks it up next. Format and rules: `.agent/P
   `origin` (https://github.com/DatMai/itad-asset-extractor, public). The work of 12 Nov after the
   release (second review, three fix rounds, browser tests, documents) is committed and pushed.
 - **Works, with proof:**
-  - 507 unit tests in 15 files (`pnpm test`), `pnpm typecheck` and `pnpm lint`. The
+  - 519 unit tests in 15 files (`pnpm test`), `pnpm typecheck` and `pnpm lint`. The
     last recorded run is `.local-map/evidence/checks/latest.txt`; check its date and commit
     before relying on it, and run `.local-map/scripts/check.sh --all` to replace it.
   - Client sample 1: headers on rows 4 and 3, 15 + 4 = 19 assets, `TOTAL` skipped, one value to

@@ -128,6 +128,13 @@ describe("mapColumns: names it has not seen exactly", () => {
     expect(byHeader(["RAM (GB)"], [], "RAM (GB)")).toMatchObject({ target: "ramGB", confidence: 1 });
   });
 
+  it("takes a column called just 'Machine' for the model, but not 'Machine Name' or 'Machine Type'", () => {
+    const rows = [["ThinkCentre M720q"], ["Z2 Tower G5"], ["Latitude 5420"]];
+    expect(byHeader(["Machine"], rows, "Machine")).toMatchObject({ target: "model" });
+    expect(byHeader(["Machine Name"], [["SYD-LT-0042"], ["MEL-PC-0007"]], "Machine Name").target).not.toBe("model");
+    expect(byHeader(["Machine Type"], [["Laptop"], ["Desktop"]], "Machine Type").target).not.toBe("model");
+  });
+
   it("reads a misspelt header when it is the only candidate", () => {
     expect(byHeader(["Seriel No"], [], "Seriel No")).toMatchObject({ target: "serialNumber" });
   });

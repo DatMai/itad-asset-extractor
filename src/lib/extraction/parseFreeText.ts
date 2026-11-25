@@ -37,9 +37,20 @@ export interface ParsedText {
   ramGB?: Found<number>;
   storageGB?: Found<number>;
   screenInches?: Found<number>;
+  /** Only when the cell labels it ("S/N PF1ZK2AB"); a code on its own is never called a serial. */
+  serialNumber?: Found<string>;
   /** Set when the text describes something that is not a computer, e.g. "monitor". */
   nonComputer?: string;
 }
+
+/**
+ * A serial number that the cell itself labels: "S/N PF1ZK2AB", "SN: 7HKQ2M3", "Serial No. 5CG1234XYZ",
+ * "Service Tag 9JZL5N2". Group 1 is the value: 5 to 20 letters, digits or hyphens with at least one
+ * digit, so "S/N unknown" and "serial port" give nothing. A bare "SN" needs a space or a mark after
+ * it, so the "SN" of "SNMP" is not a label.
+ */
+const SERIAL =
+  /(?<![a-z0-9])(?:s\/n|sn(?=[\s:#])|serial(?:\s*(?:no\.?|number|num\.?))?|(?:service|svc)\s*tag)\s*[:#]?\s*((?=[a-z0-9-]*\d)[a-z0-9][a-z0-9-]{4,19})(?![a-z0-9])/i;
 
 /** A screen size needs its unit in free text; otherwise any small number would qualify. */
 const SCREEN = /(?<![a-z0-9.])(\d{1,2}(?:\.\d{1,2})?)\s?(?:''|["”″]|-?\s?inch(?:es)?\b|-?in\b)/gi;
@@ -129,6 +140,14 @@ export function parseFreeText(text: string): ParsedText {
   const cut = (index: number, length: number) => {
     rest = `${rest.slice(0, index)} | ${rest.slice(index + length)}`;
   };
+
+  // 0. A labelled serial number comes out first: its letters and digits can look like a size
+  //    ("5CG8GB16TB") or a model, and it belongs to neither.
+  const serial = SERIAL.exec(rest);
+  if (serial) {
+    result.serialNumber = { value: serial[1], raw: serial[0].trim(), confidence: 0.9 };
+    cut(serial.index, serial[0].length);
+  }
 
   // 1. CPU.
   const cpu = findCpu(rest);

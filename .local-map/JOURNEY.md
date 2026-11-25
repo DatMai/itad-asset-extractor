@@ -292,3 +292,25 @@ Append-only log. Newest at the bottom. Times are Vietnam time (GMT+7).
 - Earlier entries in this file still name `docs/spec.md` and `docs/plan.md`; they describe the
   repository as it was then.
 - No code changed. Checks: see `evidence/checks/latest.txt`.
+
+## 2026-11-25: two gaps found while practising for the demo
+
+Both came from the practice files in `.interview/` (local only), each fixed test first with the
+`add-extraction-rule` steps.
+
+- **Input:** `Lenovo ThinkPad T490 i5-8365U 8GB 256GB SSD 14" S/N PF1ZK2AB` in a one-column file.
+  The serial number was not extracted. **Rule:** `SERIAL` in `parseFreeText.ts` reads a serial
+  that the cell labels (`S/N`, `SN:`, `Serial No.`, `Service Tag`), 5 to 20 characters with at
+  least one digit, and takes it out before sizes are looked for, so `5CG8GB16TB` is not read as
+  RAM and storage. `extractAssets.ts` fills the serial field from it only where the serial column
+  gave nothing. Confidence 0.9. **Tests:** "parseFreeText: a serial number written in the
+  description" (10 cases) and "a serial number written inside a description" in
+  `extractAssets.test.ts`.
+- **Not done on purpose:** a code with no label (`ThinkPad T490 PF1ZK2AB`) is still not called a
+  serial number. Guessing there would break rule 1, never invent data.
+- **Input:** a column named `Machine` holding `ThinkCentre M720q`. It was left unmapped.
+  **Rule:** `machine` added to the whole-header names of Model in `fields.ts`, so `Machine Name`
+  (often a host name) and `Machine Type` are not affected. **Test:** "takes a column called just
+  'Machine' for the model…" in `mapColumns.test.ts`.
+- The suite has 519 unit tests. `check.sh --all` passes; output in `evidence/checks/latest.txt`.
+

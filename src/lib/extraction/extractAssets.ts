@@ -45,7 +45,7 @@ export const NORMALISERS: Record<FieldKey, Normaliser> = {
 };
 
 /** The facts parseFreeText can find in a description. */
-const PARSED_KEYS = ["manufacturer", "model", "assetType", "cpu", "ramGB", "storageGB", "screenInches"] as const;
+const PARSED_KEYS = ["manufacturer", "model", "assetType", "cpu", "ramGB", "storageGB", "screenInches", "serialNumber"] as const;
 
 /** A row needs at least one of these to count as an asset; a person and a place are not enough. */
 const IDENTIFYING: FieldKey[] = ["model", "serialNumber", "manufacturer", "cpu", "ramGB", "storageGB", "assetTag", "assetType"];

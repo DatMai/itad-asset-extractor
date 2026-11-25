@@ -22,7 +22,7 @@ pnpm i && pnpm dev
 Open http://localhost:3000 and drop a spreadsheet, or click one of the six bundled samples.
 
 ```bash
-pnpm test        # 507 unit and pipeline tests (Vitest)
+pnpm test        # 519 unit and pipeline tests (Vitest)
 pnpm typecheck
 pnpm lint
 pnpm build
@@ -180,6 +180,9 @@ sources is in [`docs/research.md`](docs/research.md).
 - **Vocabulary is finite.** Brands, product lines and CPU families come from tables in
   `vocab.ts`. An unknown brand is kept as written; an unknown line gives no inferred type.
   `Core M-5Y10` is not recognised and is kept as written, marked "Check".
+- **A serial number inside a description** is read only when the cell labels it (`S/N PF1ZK2AB`,
+  `Serial No. …`, `Service Tag …`) and the value has a digit. A bare code in a description is
+  never called a serial number. A serial column, when it has a value, always wins.
 - **Remarks in a description** are understood only after a known product line.
   `HP 840 G5 with charger`, with no CPU or RAM in the row, is set aside as an accessory. Once a
   remark names an accessory, everything after it is dropped, so `with 16GB RAM + dock` gives no
@@ -234,7 +237,7 @@ the documents use its layout:
 | --- | --- |
 | Design before code | [the spec](docs/superpowers/specs/2026-11-11-asset-sheet-extractor-design.md), with research in [`docs/research.md`](docs/research.md) |
 | Plan in small test-first tasks | [the plan](docs/superpowers/plans/2026-11-11-asset-sheet-extractor.md), each task tied to its commit |
-| Test first | 507 unit tests next to the code; the acceptance criteria are tests on the real files |
+| Test first | 519 unit tests next to the code; the acceptance criteria are tests on the real files |
 | Review before merge | two reviews, recorded in [`.local-map/REVIEW.md`](.local-map/REVIEW.md) |
 | Evidence before "done" | `.local-map/scripts/check.sh`, output kept in `.local-map/evidence/checks/` |
 
@@ -301,7 +304,7 @@ Three points to make:
 
 1. **It is honest about doubt.** Unknown stays empty; uncertain is yellow with a reason; inferred
    is labelled. A wrong value shown confidently is the failure this tool exists to prevent.
-2. **Rules first, AI last.** The pipeline is deterministic and the suite has 507 unit
+2. **Rules first, AI last.** The pipeline is deterministic and the suite has 519 unit
    tests; the LLM is a small,
    opt-in second opinion that is not trusted. That is a choice about privacy and repeatability,
    not about cost.

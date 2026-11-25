@@ -48,6 +48,11 @@ export interface RawSheet {
   /** rows[0] is row 1 in the spreadsheet. Every cell is a trimmed string, "" when empty. */
   rows: string[][];
   hidden: boolean;
+  /**
+   * For one table of a sheet that holds several (see splitTables): how many rows of the
+   * original sheet come before rows[0]. Row numbers shown to the user add it.
+   */
+  rowOffset?: number;
   /** Set when the sheet was larger than our limits and was cut. */
   truncated?: string;
 }

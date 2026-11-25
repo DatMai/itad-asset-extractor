@@ -129,6 +129,8 @@ describe("normaliseAssetType", () => {
     ["Tablet", "tablet"],
     ["NAS", "nas"],
     ["Tower", "desktop"],
+    ["2-in-1", "laptop"],
+    ["2in1", "laptop"],
     ["MacBook", "laptop"],
     ["Máy tính xách tay", "laptop"],
     ["Máy chủ", "server"],

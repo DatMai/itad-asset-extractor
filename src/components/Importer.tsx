@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { applyEdits, NO_EDITS, setColumnTarget, type Edits } from "@/lib/extraction/edits";
 import { LIMITS } from "@/lib/extraction/limits";
-import { extractAll, planSheet } from "@/lib/extraction/pipeline";
+import { extractAll, planSheet, splitTables } from "@/lib/extraction/pipeline";
 import type { Asset, ColumnTarget, FieldKey, SheetPlan } from "@/lib/extraction/types";
 import { SuggestionsSchema } from "@/lib/llm/schema";
 import { applySuggestions, buildSuggestRequest, unclearColumns } from "@/lib/llm/suggestions";
@@ -59,7 +59,8 @@ export function Importer({ aiAvailable }: { aiAvailable: boolean }) {
     try {
       // The spreadsheet parser is the largest part of the app; fetch it only when a file is opened.
       const { readWorkbook } = await import("@/lib/extraction/readWorkbook");
-      const sheets = readWorkbook(new Uint8Array(await read()), fileName);
+      // One sheet can hold several tables (one per customer, say); each is planned on its own.
+      const sheets = readWorkbook(new Uint8Array(await read()), fileName).flatMap(splitTables);
       lastLoadId.current += 1;
       setLoaded({
         loadId: lastLoadId.current,
@@ -196,7 +197,7 @@ export function Importer({ aiAvailable }: { aiAvailable: boolean }) {
       {loaded && result && (
         <>
           <p className="text-sm text-slate-700" aria-live="polite">
-            Opened <strong>{loaded.fileName}</strong>: {loaded.plans.length} {loaded.plans.length === 1 ? "sheet" : "sheets"},{" "}
+            Opened <strong>{loaded.fileName}</strong>: {loaded.plans.length} {loaded.plans.some((plan) => plan.sheet.rowOffset !== undefined) ? "tables" : loaded.plans.length === 1 ? "sheet" : "sheets"},{" "}
             {result.assets.length} rows extracted.
           </p>
           {/* The key makes React build both panels anew for every opened file, so the chosen tab,

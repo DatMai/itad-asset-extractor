@@ -22,11 +22,11 @@ pnpm i && pnpm dev
 Open http://localhost:3000 and drop a spreadsheet, or click one of the six bundled samples.
 
 ```bash
-pnpm test        # 519 unit and pipeline tests (Vitest)
+pnpm test        # 534 unit and pipeline tests (Vitest)
 pnpm typecheck
 pnpm lint
 pnpm build
-pnpm e2e         # 8 browser tests (Playwright)
+pnpm e2e         # 9 browser tests (Playwright)
 ```
 
 `pnpm e2e` builds the app, serves it on port 3100 and drives the Google Chrome installed on the
@@ -69,6 +69,7 @@ optional, on a click:  unclear columns ─► POST /api/suggest-mapping ─► C
 | Stage | File | What it decides, and how |
 | --- | --- | --- |
 | Read | `readWorkbook.ts` | The only code that knows SheetJS. Detects the format from the first bytes, not the extension. Text files are decoded by us and read as raw text, so `0012345` and `12/03/2021` stay as typed. Date cells are converted from their day number, so no time zone is involved. The size of a sheet is measured from its cells, not from what the file declares. |
+| Tables | `splitTables.ts` | One sheet can hold several tables stacked one under the other (a manifest per customer), each with its own column names. A new table starts at a row that follows a blank or a one-cell title row and reads like a header by itself; a repeated header does not count. Each table is then read like a sheet of its own and keeps the row numbers of the file. |
 | Header | `detectHeader.ts` | Scores the first 30 rows: +3 for a known column name, +1 for a label, −2 for data. A header must have a table of similar width under it, so titles and footers lose. |
 | Columns | `mapColumns.ts`, `fields.ts` | Header evidence (known name, name inside a longer header, abbreviation, misspelling) combined with value evidence (what the cells look like). Values can weaken a header match or map a column with no header. A qualifier changes the meaning: `HDD Type` and `Memory Slots` are not sizes, so they are not read as storage or RAM. |
 | Values | `normalise.ts` | One normaliser per field. Each returns a value, a confidence and a note, and returns nothing rather than guess. |
@@ -167,8 +168,11 @@ sources is in [`docs/research.md`](docs/research.md).
 
 ## Known limitations
 
-- **One table per sheet.** Two tables stacked in one sheet, or a table laid out sideways (fields
-  down, assets across), are not handled. The user can pick the header row, but not a second one.
+- **Tables side by side, or laid out sideways, are not handled.** Tables stacked one under the
+  other in a sheet are split and read one by one, as long as a blank row or a title row stands
+  between them and each has a header of its own. Two tables next to each other, a table with
+  fields down and assets across, and a second table that starts right under the first with no
+  row between them are still read as one table.
 - **One row is one asset.** A quantity column above 1 raises a warning; the row is not multiplied.
 - **Several drive or memory columns are not added up.** With `HDD 1` and `HDD 2` (or `SSD` and
   `HDD`, `RAM 1` and `RAM 2`) one column feeds the field and every value from it is marked
@@ -237,7 +241,7 @@ the documents use its layout:
 | --- | --- |
 | Design before code | [the spec](docs/superpowers/specs/2026-11-11-asset-sheet-extractor-design.md), with research in [`docs/research.md`](docs/research.md) |
 | Plan in small test-first tasks | [the plan](docs/superpowers/plans/2026-11-11-asset-sheet-extractor.md), each task tied to its commit |
-| Test first | 519 unit tests next to the code; the acceptance criteria are tests on the real files |
+| Test first | 534 unit tests next to the code; the acceptance criteria are tests on the real files |
 | Review before merge | two reviews, recorded in [`.local-map/REVIEW.md`](.local-map/REVIEW.md) |
 | Evidence before "done" | `.local-map/scripts/check.sh`, output kept in `.local-map/evidence/checks/` |
 
@@ -304,7 +308,7 @@ Three points to make:
 
 1. **It is honest about doubt.** Unknown stays empty; uncertain is yellow with a reason; inferred
    is labelled. A wrong value shown confidently is the failure this tool exists to prevent.
-2. **Rules first, AI last.** The pipeline is deterministic and the suite has 519 unit
+2. **Rules first, AI last.** The pipeline is deterministic and the suite has 534 unit
    tests; the LLM is a small,
    opt-in second opinion that is not trusted. That is a choice about privacy and repeatability,
    not about cost.

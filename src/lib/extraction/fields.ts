@@ -75,7 +75,7 @@ export const FIELDS: Record<FieldKey, FieldDef> = {
   },
   assetTag: {
     label: "Asset tag",
-    synonyms: ["asset tag", "asset id", "asset no", "asset number", "asset code", "tag no", "tag number", "inventory no", "inventory number", "ma tai san", "ma ts"],
+    synonyms: ["asset tag", "asset id", "asset identifier", "asset no", "asset number", "asset code", "tag no", "tag number", "inventory no", "inventory number", "ma tai san", "ma ts"],
     wholeHeaderOnly: ["tag", "barcode"],
   },
   assignedTo: {

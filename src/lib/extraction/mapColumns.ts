@@ -208,6 +208,8 @@ function candidatesFor(index: number, header: string, values: string[]): Candida
 /** How well a header names a field: 1 for a known name, less for a partial or misspelt one. */
 function nameScore(header: string, field: FieldDef): { score: number; reason: string } | null {
   const words = tokens(header).filter((word) => !UNIT_WORDS.has(word));
+  // "Disp. (in)", "Screen in": at the end of a header "in" is the unit. Elsewhere it is a word.
+  if (words.length > 1 && words.at(-1) === "in") words.pop();
   const name = words.join(" ");
   if (name === "") return null;
   const compact = (text: string) => text.replace(/ /g, "");

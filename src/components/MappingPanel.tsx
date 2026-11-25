@@ -83,7 +83,7 @@ function SheetCard({ plan, included, assetCount, onTarget, onHeaderRow, onToggle
         </span>
         <label className="ml-auto flex items-center gap-2 text-sm text-slate-700">
           <input type="checkbox" checked={included} onChange={onToggle} className="size-4 accent-sky-600" />
-          Include this sheet
+          Include this {sheet.rowOffset === undefined ? "sheet" : "table"}
         </label>
       </div>
 
@@ -103,7 +103,7 @@ function SheetCard({ plan, included, assetCount, onTarget, onHeaderRow, onToggle
             <option value="none">No header row</option>
             {candidateRows.map((row) => (
               <option key={row.index} value={row.index}>
-                Row {row.index + 1}: {row.text.slice(0, 60)}
+                Row {row.index + 1 + (sheet.rowOffset ?? 0)}: {row.text.slice(0, 60)}
               </option>
             ))}
           </select>

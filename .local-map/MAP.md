@@ -40,10 +40,11 @@ file of their own; they are tested through the files that use them.
 | `normalise.ts` | One cell to one clean value | `normaliseRam`, `normaliseStorage`, `normaliseScreen`, `normaliseAssetType`, `normaliseManufacturer`, `normaliseCpu`, `normaliseDate`, `normaliseSerial`, `normalisePlainText`, `unitFromHeader`, `tidyCpuText`, `toUnit`, `toGB`, `AMOUNT` (the number pattern shared with `parseFreeText.ts`), `CapacityUnit` |
 | `parseFreeText.ts` | One combined cell to several values | `parseFreeText`, `ParsedText`, `Found` |
 | `mapColumns.ts` | Column to field, from header names and values | `mapColumns`, `kindOfValue`, `isKnownColumnName`, `columnLetter` |
-| `detectHeader.ts` | Which row holds the column names | `detectHeader` |
+| `splitTables.ts` | One sheet with several stacked tables to one `RawSheet` per table (`rowOffset` keeps the file's row numbers) | `splitTables` |
+| `detectHeader.ts` | Which row holds the column names | `detectHeader`, `scoreHeaderRow`, `HeaderScore` |
 | `readWorkbook.ts` | Bytes to text cells; the only user of SheetJS | `readWorkbook`, `UnreadableFileError` (and `LIMITS` again, for its test) |
 | `extractAssets.ts` | Rows to assets, skipped rows, row warnings, duplicate serials | `extractSheet`, `flagDuplicateSerials`, `NORMALISERS`, `NO_SERIAL_WARNING`, `DUPLICATE_SERIAL_PREFIX` |
-| `pipeline.ts` | The two entry points the UI calls | `planSheet`, `extractAll` (and `extractSheet` again, for tests) |
+| `pipeline.ts` | The entry points the UI calls | `planSheet`, `extractAll` (and `splitTables`, `extractSheet` again) |
 | `edits.ts` | Manual corrections, and the serial warnings that follow from them | `setColumnTarget`, `applyEdits`, `Edits`, `NO_EDITS` |
 | `exportAssets.ts` | Clean output: 21 columns, computers only | `ExportedAssetSchema`, `ExportedAsset`, `toExportRows`, `toCsv`, `toJson`, `needsReview` |
 | `pipeline.test.ts` | The acceptance criteria on the real sample files | |

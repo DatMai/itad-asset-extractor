@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
-import { sample, UNSEEN_CSV } from "./fixtures";
+import { sample, STACKED_CSV, UNSEEN_CSV } from "./fixtures";
 
 /** Upload a file through the real file input, the way a user's "choose file" does. */
 async function upload(page: Page, file: string | { name: string; mimeType: string; buffer: Buffer }) {
@@ -64,6 +64,24 @@ test("a layout it has never seen: title lines, unusual header names, a subtotal 
 
   await page.getByRole("button", { name: /^Skipped rows \(\d+\)/ }).click();
   await expect(page.getByRole("cell", { name: /Subtotal/ })).toBeVisible();
+});
+
+test("three tables stacked in one sheet are read one by one, with the sheet's own row numbers", async ({ page }) => {
+  await upload(page, { name: "stacked.csv", mimeType: "text/csv", buffer: Buffer.from(STACKED_CSV) });
+
+  await expect(opened(page)).toContainText("3 tables");
+  await expect(page.getByRole("button", { name: "Computers (6)" })).toBeVisible();
+  for (const customer of ["Customer 1 — Northwind", "Customer 2 — Contoso Leasing", "Customer 3 — Fabrikam"]) {
+    await expect(page.getByRole("heading", { name: `stacked.csv · ${customer}` })).toBeVisible();
+  }
+  // The header of the second table is row 8 of the file, the second row of its own block.
+  await expect(page.locator('[id="header-row-stacked.csv · Customer 2 — Contoso Leasing"]')).toHaveValue("1");
+  await expect(page.locator('[id="header-row-stacked.csv · Customer 2 — Contoso Leasing"] option:checked')).toHaveText(/^Row 8: /);
+
+  await expect(cell(page, /^Serial number: SN-NW-001/)).toBeVisible(); // first table, "S/N"
+  await expect(cell(page, /^Asset tag: CL-2024-0001/)).toBeVisible(); // second table, "Asset Identifier"
+  await expect(cell(page, /^Serial number: PB3FRTQV/)).toBeVisible(); // third table, "sn"
+  await expect(cell(page, /^RAM \(GB\): 16 GB/)).toHaveCount(4); // "16 GB", "16384MB", "16 GB", "16"
 });
 
 test("the user can correct how the file was read", async ({ page }) => {

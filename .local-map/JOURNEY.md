@@ -314,3 +314,27 @@ Both came from the practice files in `.interview/` (local only), each fixed test
   'Machine' for the model…" in `mapColumns.test.ts`.
 - The suite has 519 unit tests. `check.sh --all` passes; output in `evidence/checks/latest.txt`.
 
+
+## 2026-11-25 (evening): a sheet with three stacked tables
+
+Found with a practice manifest that has three customers in one sheet (kept local in
+`.interview/`; the tests use rows of my own with the same shape).
+
+- **Input:** rows 1 to 12 `Customer 1` with `S/N, Make, Device Cat., Model #, CPU Spec, Disp. (in),
+  Mem., HDD/SSD`; rows 15 to 26 `Customer 2` with ten other column names; rows 29 to 40
+  `Customer 3` with `tag, sn, mfr, type, mdl, proc, screen, ram, drive, cond`. **Before:** the
+  header was found on row 16 only: the 10 assets of the first table were lost and the third
+  table was read with the second table's columns. **Rule:** `splitTables.ts` (decision D27)
+  and `rowOffset` on `RawSheet`. **After:** 30 of 30 assets, each table with its own mapping
+  and the row numbers of the file. **Tests:** `splitTables.test.ts` (10 cases) and the browser
+  test "three tables stacked in one sheet…".
+- **Input:** header `Disp. (in)`. Mapped to Screen from the values only, at 0.58. **Rule:** a
+  trailing `in` in a header is a unit (`mapColumns.ts`), so `Disp.` is read as an abbreviation
+  of `display`. **Test:** "reads 'Disp. (in)' as the screen size…".
+- **Input:** header `Asset Identifier` beside `Serial No.`. It was taken for a second serial
+  column and left unused. **Rule:** `asset identifier` added to the names of Asset tag in
+  `fields.ts`. **Test:** "maps 'Asset Identifier' to the asset tag…".
+- **Input:** type `2in1`. Not recognised, so the product line decided (Surface Pro: tablet)
+  while `2-in-1` gave laptop. **Rule:** `2in1` added beside `2 in 1` in `TYPE_COLUMN_ONLY_WORDS`.
+  **Test:** `"2in1" -> laptop` in `normalise.test.ts`.
+- The suite has 534 unit tests and 9 browser tests. `check.sh --all` passes.

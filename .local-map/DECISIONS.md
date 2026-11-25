@@ -281,3 +281,19 @@ entry that names the one it replaces. The short version of these is the trade-of
 - **Cost.** The plan is a record written after the fact, not the document the work was run from.
   It says so at the top and lists what differed from the workflow at the end. Old links to
   `docs/spec.md` and `docs/plan.md` from outside the repository no longer resolve.
+
+## D27 Several tables in one sheet are split before anything else
+
+- **Situation.** A manifest with three customers stacked in one sheet, each with a title row and
+  its own column names and order. One header per sheet found the middle table: the 10 assets
+  above it were lost without a word, and the table below was read with the wrong columns.
+- **Options.** (a) Let the user pick more than one header row. (b) Teach `extractSheet` to switch
+  mapping when it meets a new header. (c) Cut the sheet into one `RawSheet` per table before
+  planning, each with a `rowOffset`.
+- **Choice.** (c), in `splitTables.ts`.
+- **Why.** Header detection, column mapping, extraction, the mapping screen and the AI suggestion
+  already work per sheet, so none of them had to change: a table is a sheet with an offset. The
+  user corrects each table on its own card, and the title row becomes the table's name.
+- **Cost.** A new table is only seen after a blank or one-cell row, so a header placed directly
+  under the last data row of the table above is not found. Tables side by side are not handled.
+  A sheet with one table goes through unchanged (fewer than two header rows found).

@@ -123,7 +123,7 @@ export const TYPE_WORDS: { pattern: RegExp; type: AssetType }[] = [
 export const TYPE_COLUMN_ONLY_WORDS: { pattern: RegExp; type: AssetType }[] = [
   { pattern: /\b(tower|sff|small form factor|usff)\b/, type: "desktop" },
   { pattern: /\b(rack|blade)\b/, type: "server" },
-  { pattern: /\b(convertible|2 in 1)\b/, type: "laptop" },
+  { pattern: /\b(convertible|2 in 1|2in1)\b/, type: "laptop" },
 ];
 
 /** Things that turn up in asset lists but are not computers. */

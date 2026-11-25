@@ -326,3 +326,21 @@ describe("mapColumns: a second drive or memory column", () => {
     expect(result[0]).toMatchObject({ target: "storageGB", confidence: 1 });
   });
 });
+
+describe("mapColumns: names from a customer manifest with three tables", () => {
+  it("reads 'Disp. (in)' as the screen size: the unit at the end is not part of the name", () => {
+    const column = byHeader(["S/N", "Disp. (in)"], [["SN-001", "15.6 in"], ["SN-002", "14"], ["SN-003", "13.3\""]], "Disp. (in)");
+    expect(column.target).toBe("screenInches");
+    expect(column.confidence).toBeGreaterThanOrEqual(0.7);
+  });
+
+  it("does not drop 'in' from the middle of a header", () => {
+    expect(byHeader(["Serial", "Signed in by"], [["SN-001", "Sarah Lee"], ["SN-002", "Tom Reid"]], "Signed in by").target).not.toBe("screenInches");
+  });
+
+  it("maps 'Asset Identifier' to the asset tag when the serial number has its own column", () => {
+    const rows = [["CL-2024-0001", "AB12CD34"], ["CL-2024-0002", "EF56GH78"]];
+    expect(byHeader(["Asset Identifier", "Serial No."], rows, "Asset Identifier")).toMatchObject({ target: "assetTag", confidence: 1 });
+    expect(byHeader(["Asset Identifier", "Serial No."], rows, "Serial No.").target).toBe("serialNumber");
+  });
+});

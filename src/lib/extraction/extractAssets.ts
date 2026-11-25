@@ -91,7 +91,7 @@ export function extractSheet(plan: SheetPlan): { assets: Asset[]; skipped: Skipp
     const filled = row.filter((cell) => cell !== "");
     if (filled.length === 0) continue; // a blank row needs no explanation
 
-    const rowNumber = index + 1;
+    const rowNumber = index + 1 + (sheet.rowOffset ?? 0);
     const skip = (reason: string) =>
       skipped.push({ sheet: sheet.name, rowNumber, reason, preview: filled.slice(0, 4).join(" · ").slice(0, 80) });
 
